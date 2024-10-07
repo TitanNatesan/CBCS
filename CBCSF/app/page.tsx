@@ -1,40 +1,47 @@
 "use client";
 import React from "react";
 import axios from "axios";
-import Link from "next/link";
-import { useRouter } from "next/navigation"; // Change this import
+import { useRouter } from "next/navigation";
 
 const Home = () => {
   const [rollno, setRollno] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const router = useRouter(); // This should now refer to next/navigation's useRouter
   const [error, setError] = React.useState("");
-  const Submitbro = async (e: any) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(
-        "http://192.168.169.143:8000/login/",
-        {
-          username: rollno,
-          password: password,
-        }
-      );
-      console.log(response.data)
+  const [loading, setLoading] = React.useState(false);
+  const router = useRouter();
 
-      if (response.data['token']&&response.data['user_type']==="Student") {
-        localStorage.setItem("token", response.data['token']);
-        router.push("/studentdashboard");
-      }
-      else if (response.data['token']&&response.data['user_type']==="HOD") {
-        localStorage.setItem("token", response.data['token']);
-        router.push("/admindashboard");
-      }
-      else {
+  const Submitbro = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true); // Set loading to true
+
+    if (!rollno || !password) {
+      setError("Both fields are required.");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/login/", {
+        username: rollno,
+        password: password,
+      });
+
+      if (response.data["token"]) {
+        localStorage.setItem("token", response.data["token"]);
+        if (response.data["user_type"] === "Student") {
+          router.push("/studentdashboard");
+        } else {
+          router.push("/admindashboard");
+        }
+      } else {
         setError("Invalid Credentials");
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error during login:", error);
+      setError("An error occurred during login. Please try again.");
+    } finally {
+      setLoading(false); // Reset loading state
     }
   };
 
@@ -49,22 +56,24 @@ const Home = () => {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6">
+            {error && <p className="text-red-500 text-sm">{error}</p>}{" "}
+            {/* Error message display */}
+            <form className="space-y-6" onSubmit={Submitbro}>
               <div>
                 <label
-                  htmlFor="email"
+                  htmlFor="username"
                   className="block text-sm font-medium text-gray-700"
                 >
                   Username
                 </label>
                 <div className="mt-1">
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
+                    id="username"
+                    name="username"
+                    type="text"
                     required
                     className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                    placeholder="Enter your email address"
+                    placeholder="Enter your username"
                     value={rollno}
                     onChange={(e) => setRollno(e.target.value)}
                   />
@@ -95,10 +104,14 @@ const Home = () => {
               <div>
                 <button
                   type="submit"
-                  onClick={Submitbro}
-                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  disabled={loading} // Disable button during loading
+                  className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${
+                    loading
+                      ? "bg-gray-500"
+                      : "bg-indigo-600 hover:bg-indigo-700"
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
                 >
-                  Sign in
+                  {loading ? "Signing in..." : "Sign in"}
                 </button>
               </div>
             </form>

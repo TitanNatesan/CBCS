@@ -1,157 +1,335 @@
 "use client";
-import React from "react";
+import axios from "axios";
+import React, { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faBook, faRightLong, faTrash } from "@fortawesome/free-solid-svg-icons";
 
-const page = () => {
-  const [view, setView] = React.useState("currentsemester");
+const Page: React.FC = () => {
+
+  const [student, setStudent] = useState(null);
+  const [view, setView] = useState("courses");
+  const [courses, setCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [currentSem, setCurrentSem] = useState(0);
+  const [totalCredits, setTotalCredits] = useState(0);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+
+  const fetchCourses = async (sem) => {
+    setCurrentSem(sem);
+    try {
+      const request = await axios.get(`http://127.0.0.1:8000/selectcourse/${sem}/`, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      })
+      setCourses(request.data['avail_courses']);
+      for (let i = 0; i < request.data['avail_courses'].length; i++) {
+        if (selectedCourses.some((c) => c.id === request.data['avail_courses'][i].id)) {
+          setCourses(courses.filter((c) => c.id !== request.data['avail_courses'][i].id));
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const fetchStudentDetails = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
+        headers: {
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      });
+      setStudent(response.data['student']);
+      setCurrentSem(response.data['sem']);
+      fetchCourses(response.data['sem']);;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const addSelectedCourse = (course) => {
+    if (totalCredits + course.courseCredit > 30) {
+      alert("Cannot add more courses. Maximum credit limit reached.")
+      return;
+    } else if (!selectedCourses.some((c) => c.id === course.id)) {
+      setSelectedCourses([...selectedCourses, course]);
+      setTotalCredits(totalCredits + course.courseCredit);
+      setCourses(courses.filter((c) => c.id !== course.id));
+    } else {
+      alert('Course already added');
+    }
+  }
+
+  const removeSelectedCourse = (course) => {
+    setSelectedCourses(selectedCourses.filter((c) => c.id !== course.id));
+    setTotalCredits(totalCredits - course.courseCredit);
+    if (course.semester === currentSem) {
+      setCourses([...courses, course]);
+    }
+  }
+
+  const handleSubmit = async () => {
+    const course_ids = selectedCourses.map((course) => course.id);
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/selectcourse/1/", {
+        CourseIDs: course_ids
+      }, {
+        headers: {
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      })
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const fetchEnrolledCourses = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/getCourses/", {
+        headers: {
+          Authorization: `Token ${localStorage.getItem('token')}`
+        }
+      })
+      setEnrolledCourses(response.data);
+      console.log("Enrolled Courses: ");
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+
+  useEffect(() => {
+    fetchStudentDetails();
+    fetchEnrolledCourses();
+  }, [view]);
+
   return (
-    <div>
-      <div className="flex h-screen bg-gray-100">
-        <div className="hidden md:flex flex-col w-64 bg-gray-800">
-          <div className="flex items-center justify-center h-16 bg-gray-900">
-            <span className="text-white font-bold uppercase">
-              Kahe Dashboard
-            </span>
-          </div>
-          <div className="flex flex-col flex-1 overflow-y-auto">
-            <nav className="flex-1 px-2 py-4 bg-gray-800">
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 text-gray-100 hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"
-                  />
-                </svg>
-                Current Semester
-              </a>
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z"
-                  />
-                </svg>
-                Babies
-              </a>
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605"
-                  />
-                </svg>
-                Procurement
-              </a>
-
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"
-                  />
-                </svg>
-                Transactions
-              </a>
-
-              <a
-                href="#"
-                className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-                Settings
-              </a>
-            </nav>
-          </div>
+    <div className="flex h-screen text-black overflow-y-hidden bg-gray-100">
+      <div className="hidden md:flex flex-col w-1/5 bg-gray-800">
+        <div className="flex items-center justify-center h-16 bg-gray-900">
+          <span className="text-white font-bold uppercase">Kahe Dashboard</span>
         </div>
+        <div className="flex flex-col mx-4 overflow-y-auto">
+          <div className="mt-4 bg-white shadow-md rounded-lg p-4">
+            {student ? (
+              <div className="space-y-4">
+                <div className="ml-4">
 
-        <div className="flex flex-col flex-1 overflow-y-auto">
-          {view === "currentsemester" && (
+                  <h3 className="text-lg font-semibold inline">Username: </h3>
+                  <p className="text-gray-600 inline">{student.username}</p>
+                  <br />
+                  <h3 className="text-lg font-semibold inline">E-mail: </h3>
+                  <p className="text-gray-600 inline">{student.email}</p>
+                </div>
+              </div>
+            ) : (
+              <p>No student data available</p>
+            )}
+          </div>
+          <nav className="flex-1 px-2 py-4 bg-gray-800">
+            <a
+              href="#"
+              onClick={() => setView("courses")}
+              className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+            >
+              <FontAwesomeIcon icon={faBook} className="h-6 w-6 mr-2" />
+              Courses Enrollment
+            </a>
+            <a
+              href="#"
+              onClick={() => setView("EnrolledCourses")}
+              className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
+            >
+              <FontAwesomeIcon icon={faBook} className="h-6 w-6 mr-2" />
+              Enrolled Courses
+            </a>
+
+          </nav>
+        </div>
+      </div>
+
+      <div className="flex flex-col flex-1 overflow-y-auto">
+        <div className="p-6">
+          {view === "courses" && (
+            <div className="flex-col w-full justify-evenly">
+              <div className="flex gap-10">
+                <div className="flex-col w-1/2 ">
+                  <h1 className="font-bold text-xl inline">Available Courses</h1>
+                  <select name="semester" id="current_semester" className="ml-5" value={currentSem} onChange={(e) => { fetchCourses(e.target.value), setCurrentSem(e.target.value) }}>
+                    {Array.from({ length: 8 }, (_, i) => i + 1).map((semester) => (
+                      <option key={semester} value={semester} >
+                        Semester {semester}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="overflow-x-auto mt-4 bg-white shadow-md rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            ID
+                          </th>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Subject Name
+                          </th>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Subject Code
+                          </th>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Semester No.
+                          </th>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Credits
+                          </th>
+                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {courses.length > 0 ?
+                          (
+                            courses.map((course) => (
+                              <tr key={course.id} >
+                                <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                                  {course.id}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-500">
+                                  {course.name}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-500">
+                                  {course.code}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-500">
+                                  {course.semester}
+                                </td>
+                                <td className="py-3 px-4 text-sm text-gray-500">
+                                  {course.courseCredit}
+                                </td>
+                                <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-green-600 transition-all" onClick={() => addSelectedCourse(course)}>
+                                  <FontAwesomeIcon icon={faRightLong} />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="text-center">
+                                No courses available
+                              </td>
+                            </tr>
+                          )
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="flex-col w-1/2 ">
+                  <h3 className="text-xl font-bold mb-4 inline">
+                    Enrolled Courses
+                  </h3>
+                  <p className="inline ml-10">{totalCredits}/30</p>
+
+                  <div className="overflow-x-auto mt-4 bg-white shadow-md rounded-lg">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            ID
+                          </th>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Subject Name
+                          </th>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Subject Code
+                          </th>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Semester No.
+                          </th>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Credits
+                          </th>
+                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedCourses.length > 0 ?
+                          (selectedCourses.map((course) => (
+                            <tr key={course.id}>
+                              <td className="py-3 px-4 text-sm font-medium text-gray-900">
+                                {course.id}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-500">
+                                {course.name}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-500">
+                                {course.code}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-500">
+                                {course.semester}
+                              </td>
+                              <td className="py-3 px-4 text-sm text-gray-500">
+                                {course.courseCredit}
+                              </td>
+                              <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-red-600 transition-all" onClick={() => removeSelectedCourse(course)}>
+                                <FontAwesomeIcon icon={faTrash} />
+                              </td>
+                            </tr>
+                          ))) : (
+                            <tr>
+                              <td colSpan="6" className="text-center">
+                                No courses Selected
+                              </td>
+                            </tr>
+                          )
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <button
+                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mt-10"
+                onClick={handleSubmit}
+              >
+                Submit
+              </button>
+            </div>
+          )}
+          {view === "EnrolledCourses" && (
             <div>
-              <div className="flex items-center justify-between p-5 bg-gray-900">
-                <div className="flex items-center">
-                  <span className="text-white font-bold">Enrolled Courses</span>
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold text-black">Semester 1</span>
-                    <span className="text-sm font-light text-gray-500">
-                      2021-2022
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-light text-gray-500">
-                      12/08/2021
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <div>
-                    <span className="text-lg font-bold text-black">Semester 2</span>
-                    <span className="text-sm font-light text-gray-500">
-                      2021-2022
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-sm font-light text-gray-500">
-                      12/08/2021
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <h1 className="font-bold text-xl inline">Enrolled Courses</h1>
+              <table className="w-full border">
+                <thead>
+                  <tr>
+                    <th className="border">Course Name</th>
+                    <th className="border">Course Code</th>
+                    <th className="border">Semester</th>
+                    <th className="border">Course Credit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {enrolledCourses.length > 0 ? (
+                    enrolledCourses.map((course) => (
+                      <tr key={course.id}>
+                        <td className="border">{course.name}</td>
+                        <td className="border">{course.code}</td>
+                        <td className="border">{course.semester}</td>
+                        <td className="border">{course.courseCredit}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No courses available</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
             </div>
           )}
         </div>
@@ -160,4 +338,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
