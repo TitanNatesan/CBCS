@@ -129,13 +129,14 @@ class CourseView(generics.ListCreateAPIView):
     serializer_class = serializers.CourseSerializer
     permission_classes = [IsAuthenticated]
     
-    def perform_create(self, serializer):
-        user = self.request.user
-        if hasattr(user, 'hod'):
-            department = user.hod.department
-        else:
-            raise serializers.ValidationError("User is not associated with a department.")
-        serializer.save(department=department)
+    def post(self, request, *args, **kwargs):
+        if models.HOD.objects.filter(username=request.user.username).exists():
+            course = serializers.CourseSerial(data=request.data)
+            if course.is_valid():
+                course.save(department=request.user.hod.department)
+                return Response(course.data, status=status.HTTP_201_CREATED)
+            return Response(course.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "You are not authorized to view courses."}, status=status.HTTP_403_FORBIDDEN)
         
     def get(self, request, *args, **kwargs):
         if models.HOD.objects.filter(username=request.user.username).exists():
@@ -193,11 +194,31 @@ def getUpSemWithStudDetail(request):
     if request.method=="GET":
         student = models.Student.objects.get(username=request.user.username)
         studSerial = serializers.StudentSendSerial(student)
+        semRep = models.SemReport.objects.filter(student=student)
+        semSerial = serializers.ReportSerial(semRep,many=True)
         cont = {
             "student":studSerial.data,
             "sem":student.sem,
             "department":student.department.name,
             "program":student.program.name,
+            "report":semSerial.data,
+        }
+        return Response(cont)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def getUpSemWithStudDetailHOD(request,sid):
+    if request.method=="GET":
+        student = models.Student.objects.get(pk=sid)
+        studSerial = serializers.StudentSendSerial(student)
+        semRep = models.SemReport.objects.filter(student=student)
+        semSerial = serializers.ReportSerial(semRep,many=True)
+        cont = {
+            "student":studSerial.data,
+            "sem":student.sem,
+            "department":student.department.name,
+            "program":student.program.name,
+            "report":semSerial.data,
         }
         return Response(cont)
         

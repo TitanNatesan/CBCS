@@ -7,6 +7,7 @@ const UploadForm = () => {
   const [subjectName, setSubjectName] = useState("");
   const [subjectCode, setSubjectCode] = useState("");
   const [isOptional, setIsOptional] = useState(false);
+  const [courseCredit, setCourseCredit] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [program, setProgram] = useState("");
@@ -68,6 +69,7 @@ const UploadForm = () => {
           name: subjectName,
           code: subjectCode,
           program: program,
+          courseCredit:courseCredit,
           is_optional: isOptional,
         },
         {
@@ -101,7 +103,7 @@ const UploadForm = () => {
               <th style={{border:"1px solid black"}}>Subject Code</th>
               <th style={{border:"1px solid black"}}>Semester</th>
               <th style={{border:"1px solid black"}}>Program</th>
-              <th style={{border:"1px solid black"}}>Is Optional Course</th>
+              {/* <th style={{border:"1px solid black"}}>Is Optional Course</th> */}
             </tr>
           </thead>
           <tbody>
@@ -112,7 +114,7 @@ const UploadForm = () => {
                   <td style={{border:"1px solid black"}}>{item.code}</td>
                   <td style={{border:"1px solid black"}}>{item.semester}</td>
                   <td style={{border:"1px solid black"}}>{item.program.name}</td>
-                  <td style={{border:"1px solid black"}}>{item.is_optional ? "Yes" : "No"}</td>
+                  {/* <td style={{border:"1px solid black"}}>{item.is_optional ? "Yes" : "No"}</td> */}
                 </tr>
               ))
             ) : (
@@ -170,6 +172,17 @@ const UploadForm = () => {
               type="text"
               value={subjectCode}
               onChange={(e) => setSubjectCode(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 font-bold mb-2">
+              Course Credit:
+            </label>
+            <input
+              type="number"
+              value={courseCredit}
+              onChange={(e) => setCourseCredit(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
           </div>

@@ -23,7 +23,13 @@ class ProgramSerial(serializers.ModelSerializer):
         fields = "__all__"
     
 class CourseSerializer(serializers.ModelSerializer):
+    # dont edit the program or add anything new to this , because it is working well 😑
     program = ProgramSerial()
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'code',"courseCredit", 'is_optional', 'semester',"program"]
+
+class CourseSerial(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'name', 'code',"courseCredit", 'is_optional', 'semester',"program"]

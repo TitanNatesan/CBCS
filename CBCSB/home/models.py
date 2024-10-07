@@ -185,6 +185,14 @@ class SemReport(models.Model):
     def __str__(self) -> str:
         return f'{self.student.username} | Sem: {self.semester}'
     
+    # def save(self, *args, **kwargs):
+    #     if self.courses.exists():
+    #         unique_courses = set(self.courses.all())
+    #         if len(unique_courses) != self.courses.count():
+    #             raise ValueError("Duplicate courses are not allowed.")
+        
+    #     super().save(*args, **kwargs)
+    
     class Meta:
         verbose_name = "Semester Report"
         verbose_name_plural = "Semester Reports"

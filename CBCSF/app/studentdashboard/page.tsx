@@ -87,14 +87,18 @@ const Page: React.FC = () => {
 
   const fetchEnrolledCourses = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/getCourses/", {
+      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
         headers: {
           Authorization: `Token ${localStorage.getItem('token')}`
         }
       })
-      setEnrolledCourses(response.data);
-      console.log("Enrolled Courses: ");
+      setEnrolledCourses(response.data.student.enrolled_courses);
       console.log(response.data);
+      let tot = 0;
+      response.data.student.enrolled_courses.map((course) => {
+        tot += course.course.courseCredit;
+      })
+      setTotalCredits(tot);
     } catch (error) {
       console.error(error);
     }
@@ -316,10 +320,10 @@ const Page: React.FC = () => {
                   {enrolledCourses.length > 0 ? (
                     enrolledCourses.map((course) => (
                       <tr key={course.id}>
-                        <td className="border">{course.name}</td>
-                        <td className="border">{course.code}</td>
-                        <td className="border">{course.semester}</td>
-                        <td className="border">{course.courseCredit}</td>
+                        <td className="border">{course.course.name}</td>
+                        <td className="border">{course.course.code}</td>
+                        <td className="border">{course.course.semester}</td>
+                        <td className="border">{course.course.courseCredit}</td>
                       </tr>
                     ))
                   ) : (

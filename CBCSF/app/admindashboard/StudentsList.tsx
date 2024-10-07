@@ -21,10 +21,23 @@ interface Student {
 
 const StudentsList = () => {
   const [students, setStudents] = useState<Student[]>([]);
+  const [individualStudent, setIndividualStudent] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string | null>(null);
   const token = localStorage.getItem("token");
+
+  const fetchIndividualStudent = async (sid: number) => {
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/getdetails/${sid}/`, {
+        headers: { Authorization: `token ${token}` },
+      })
+      console.log(response.data);
+      setSelectedStudent(response.data['student']);
+    }catch(error){
+      console.error("Error fetching individual student", error);
+    }
+  }
 
   const handleFetch = async () => {
     try {
@@ -149,9 +162,9 @@ const StudentsList = () => {
             <ul className="list-disc list-inside mb-6">
               {selectedStudent.enrolled_courses.map((course) => (
                 <li key={course.id}>
-                  {course.name} (Code: {course.code}, Semester:{" "}
-                  {course.semester}, Optional:{" "}
-                  {course.is_optional ? "Yes" : "No"})
+                  {course.course.name} (<b>Code</b>: {course.course.code}, <b>Semester</b>:{" "}
+                  {course.course.semester}, <b>Optional</b>:{" "}
+                  {course.course.is_optional ? "Yes" : "No"} Credits:{course.course.courseCredit})
                 </li>
               ))}
             </ul>
@@ -191,7 +204,7 @@ const StudentsList = () => {
                 <td className="py-2 px-4">{student.email}</td>
                 <td className="py-2 px-4">
                   <button
-                    onClick={() => handleStudentClick(student)}
+                    onClick={() => fetchIndividualStudent(student.id)}
                     className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700"
                   >
                     View Details

@@ -10,6 +10,7 @@ urlpatterns = [
     path("courses/", views.CourseView.as_view(), name="update-course"),
     path("selectcourse/<int:sem>/", views.selectCourses, name="Select Courses"),
     path("getdetails/", views.getUpSemWithStudDetail, name="Semester with Student Detail"),
+    path("getdetails/<int:sid>/", views.getUpSemWithStudDetailHOD, name="Semester with Student Detail for HOD"),
     path("getCourses/",views.getCourses,name="GetCourses"),
     path("programs/",views.programs,name="Programs"),
 ]
