@@ -82,6 +82,7 @@ class HODRegisterView(generics.CreateAPIView):
             return Response(serial.data)
         else:
             return  Response("Only Admins Can View This Page",status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)    
+
 class StudentRegisterView(generics.CreateAPIView):
     queryset = models.Student.objects.all()
     serializer_class = serializers.StudentSerializer
@@ -103,7 +104,7 @@ class StudentRegisterView(generics.CreateAPIView):
                 "id": instance.id,
                 "username": instance.username,
                 "department": instance.department.name
-            }, status=status.HTTP_201_CREATED)
+            }, status=status.HTTP_201_CREATED) 
         except models.Department.DoesNotExist:
             return Response({"error": "Program does not exist."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
@@ -254,3 +255,21 @@ def programs(request):
     if request.method == "GET":
         programs = models.Program.objects.filter(department=request.user.hod.department)
         return Response(serializers.ProgramSerial(programs, many=True).data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def adminDashBoard(request):
+    if request.method == "GET":
+        user = models.HOD.objects.get(username=request.user.username)
+        programs = models.Program.objects.filter(department=user.department)
+        pserial = serializers.ProgramSerial(programs,many=True)
+        return Response(pserial.data)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def studDashBoard(request):
+    if request.method == "GET":
+        
+        pass

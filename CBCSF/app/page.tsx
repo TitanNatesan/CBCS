@@ -39,7 +39,7 @@ const Home = () => {
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setError("An error occurred during login. Please try again.");
+      setError(error.response.data['error']);
     } finally {
       setLoading(false); // Reset loading state
     }
@@ -50,13 +50,13 @@ const Home = () => {
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
+            Coures Registration Login
           </h2>
         </div>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            {error && <p className="text-red-500 text-sm">{error}</p>}{" "}
+            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             {/* Error message display */}
             <form className="space-y-6" onSubmit={Submitbro}>
               <div>

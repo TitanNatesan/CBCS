@@ -80,6 +80,7 @@ const Page: React.FC = () => {
         }
       })
       console.log(response.data);
+      alert("Submitted")
     } catch (error) {
       console.error(error);
     }
@@ -122,7 +123,7 @@ const Page: React.FC = () => {
               <div className="space-y-4">
                 <div className="ml-4">
 
-                  <h3 className="text-lg font-semibold inline">Username: </h3>
+                  <h3 className="text-lg font-semibold inline">Reg No: </h3>
                   <p className="text-gray-600 inline">{student.username}</p>
                   <br />
                   <h3 className="text-lg font-semibold inline">E-mail: </h3>
@@ -213,7 +214,7 @@ const Page: React.FC = () => {
                                 <td className="py-3 px-4 text-sm text-gray-500">
                                   {course.courseCredit}
                                 </td>
-                                <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-green-600 transition-all" onClick={() => addSelectedCourse(course)}>
+                                <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-green-600" onClick={() => addSelectedCourse(course)}>
                                   <FontAwesomeIcon icon={faRightLong} />
                                 </td>
                               </tr>
@@ -279,7 +280,7 @@ const Page: React.FC = () => {
                               <td className="py-3 px-4 text-sm text-gray-500">
                                 {course.courseCredit}
                               </td>
-                              <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-red-600 transition-all" onClick={() => removeSelectedCourse(course)}>
+                              <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-red-600" onClick={() => removeSelectedCourse(course)}>
                                 <FontAwesomeIcon icon={faTrash} />
                               </td>
                             </tr>

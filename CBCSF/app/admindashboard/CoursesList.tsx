@@ -39,6 +39,10 @@ const CoursesList = () => {
     }
   };
 
+  useEffect(()=>{
+    handleCourses();
+  },[])
+
   useEffect(() => {
     // Filter courses based on selected semester
     if (selectedSemester) {
@@ -59,19 +63,22 @@ const CoursesList = () => {
   return (
     <div className="max-w-4xl text-black mx-auto bg-white p-8 rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6">Courses List</h2>
+      <p className="text-black">filter with program and semester</p>
+      <p className="text-black">count show pannanum based on filters</p>
       <button
         onClick={handleCourses}
         className="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 mb-6 transition duration-200"
       >
-        Fetch Courses
+        Better Remove the Button
       </button>
+
 
       <select
         value={selectedSemester}
         onChange={(e) => setSelectedSemester(e.target.value)}
         className="border rounded-lg p-2 mb-6"
       >
-        <option value="">All Semesters</option>
+        <option value="">Make Filters Valid</option>
         {semesters.map((semester, index) => (
           <option key={index} value={semester}>
             {semester}

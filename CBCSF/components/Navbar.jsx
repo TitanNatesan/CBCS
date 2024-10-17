@@ -10,6 +10,9 @@ const Navbar = () => {
         height={50}
         alt="kahe logo"
       />
+      <p className="text-black">Use full address of college website from the official website</p>
+      <h1 className="text-black">Faculty Of Engineering nu kaatanum bold ah</h1>
+      <h1 className="text-black">kela course registeration nu kaatanum</h1>
       <Image
         src="https://metaverse-portal.vercel.app/static/media/metaverselogo.aab67fbf864e9682cbe5.jpg"
         width={70}

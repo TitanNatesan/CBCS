@@ -13,4 +13,6 @@ urlpatterns = [
     path("getdetails/<int:sid>/", views.getUpSemWithStudDetailHOD, name="Semester with Student Detail for HOD"),
     path("getCourses/",views.getCourses,name="GetCourses"),
     path("programs/",views.programs,name="Programs"),
+    path("adminDash/",views.adminDashBoard),
+    # path("studDash/"),
 ]

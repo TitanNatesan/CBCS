@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface Student {
@@ -34,7 +34,7 @@ const StudentsList = () => {
       })
       console.log(response.data);
       setSelectedStudent(response.data['student']);
-    }catch(error){
+    } catch (error) {
       console.error("Error fetching individual student", error);
     }
   }
@@ -52,6 +52,10 @@ const StudentsList = () => {
       console.error("Error fetching students", error);
     }
   };
+
+  useEffect(() => {
+    handleFetch();
+  }, [])
 
   const handleStudentClick = (student: Student) => setSelectedStudent(student);
   const handleBackToList = () => setSelectedStudent(null);
@@ -75,7 +79,7 @@ const StudentsList = () => {
         onClick={handleFetch}
         className="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 mb-4"
       >
-        Fetch Students
+        Better Remove the Button
       </button>
 
       <div className="flex mb-4">
@@ -92,7 +96,7 @@ const StudentsList = () => {
           onChange={(e) => setDepartmentFilter(e.target.value || null)}
           className="border rounded-lg py-2 px-4 shadow-sm"
         >
-          <option value="">All Departments</option>
+          <option value="">Make Filters Valid</option>
           <option value="Computer Science">Computer Science</option>
           <option value="Mathematics">Mathematics</option>
           <option value="Physics">Physics</option>
@@ -133,10 +137,7 @@ const StudentsList = () => {
 
           <div className="mb-6">
             <p>
-              <strong>ID:</strong> {selectedStudent.id}
-            </p>
-            <p>
-              <strong>Username:</strong> {selectedStudent.username}
+              <strong>Register No:</strong> {selectedStudent.username}
             </p>
             <p>
               <strong>Email:</strong> {selectedStudent.email}
@@ -158,13 +159,15 @@ const StudentsList = () => {
 
           <h3 className="text-lg font-semibold mb-2">Enrolled Courses:</h3>
           {selectedStudent.enrolled_courses &&
-          selectedStudent.enrolled_courses.length > 0 ? (
+            selectedStudent.enrolled_courses.length > 0 ? (
             <ul className="list-disc list-inside mb-6">
               {selectedStudent.enrolled_courses.map((course) => (
                 <li key={course.id}>
-                  {course.course.name} (<b>Code</b>: {course.course.code}, <b>Semester</b>:{" "}
-                  {course.course.semester}, <b>Optional</b>:{" "}
-                  {course.course.is_optional ? "Yes" : "No"} Credits:{course.course.courseCredit})
+                  {course.course.name}
+                  (
+                  <b>Code</b>: {course.course.code},
+                  <b>Semester</b>: {course.course.semester}
+                  )
                 </li>
               ))}
             </ul>
@@ -191,7 +194,7 @@ const StudentsList = () => {
           <thead>
             <tr className="bg-blue-600 text-white">
               <th className="py-3 px-4">ID</th>
-              <th className="py-3 px-4">Username</th>
+              <th className="py-3 px-4">Reg No.</th>
               <th className="py-3 px-4">Email</th>
               <th className="py-3 px-4">Actions</th>
             </tr>

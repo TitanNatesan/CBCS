@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { headers } from "next/headers";
+import toast from "react-hot-toast";
 
 const UploadForm = () => {
   const [semester, setSemester] = useState("");
+  const [totalSem,setTotalSem] = useState(8)
   const [subjectName, setSubjectName] = useState("");
   const [subjectCode, setSubjectCode] = useState("");
   const [isOptional, setIsOptional] = useState(false);
@@ -40,9 +42,22 @@ const UploadForm = () => {
     }
   }
 
+  const getBack = async () =>{
+    try{
+      const response = await axios.get("http://127.0.0.1:8000/adminDash/",{
+        headers:{
+          Authorization: `Token ${token}`
+        }
+      })
+      console.log(response.data);
+      setPrograms(response.data)
+    }catch(error){
+      console.log(error)
+    }
+  }
+
   useEffect(() => {
-    fetchCourses();
-    fetchPrograms();
+    getBack();
   }, [])
 
   const handleSubmit = async () => {
@@ -78,12 +93,17 @@ const UploadForm = () => {
           },
         }
       );
-      fetchCourses();
       setSemester("");
       setSubjectName("");
       setSubjectCode("");
       setIsOptional(false);
       setLoading(false);
+      setCourseCredit(0);
+      if (response.statusText==="Created"){
+        toast.success("Created",{position:"top-right"})
+      }else{
+        toast.error("Not Created")
+      }
     } catch (error) {
       console.error("There was an error updating the course!", error);
       setErrorMessage(
@@ -95,35 +115,6 @@ const UploadForm = () => {
 
   return (
     <>
-      <div className="mb-4 text-black">
-        <table className="border-black w-full" style={{border:"1px solid black"}}>
-          <thead className="border-black ">
-            <tr style={{border:"1px solid black"}}>
-              <th style={{border:"1px solid black"}}>Subject Name</th>
-              <th style={{border:"1px solid black"}}>Subject Code</th>
-              <th style={{border:"1px solid black"}}>Semester</th>
-              <th style={{border:"1px solid black"}}>Program</th>
-              {/* <th style={{border:"1px solid black"}}>Is Optional Course</th> */}
-            </tr>
-          </thead>
-          <tbody>
-            {course.length > 0 ? (
-              course.map((item) => (
-                <tr key={item.id} className="border" style={{border:"1px solid black"}}>
-                  <td style={{border:"1px solid black"}}>{item.name}</td>
-                  <td style={{border:"1px solid black"}}>{item.code}</td>
-                  <td style={{border:"1px solid black"}}>{item.semester}</td>
-                  <td style={{border:"1px solid black"}}>{item.program.name}</td>
-                  {/* <td style={{border:"1px solid black"}}>{item.is_optional ? "Yes" : "No"}</td> */}
-                </tr>
-              ))
-            ) : (
-              <p>No courses available.</p>
-            )}
-          </tbody>
-        </table>
-      </div>
-
       <div className="max-w-lg mx-auto text-black bg-white p-8 rounded-lg shadow-md">
         <h2 className="text-2xl font-bold mb-6">Upload Course</h2>
         <form>
@@ -133,7 +124,11 @@ const UploadForm = () => {
             </label>
             <select
               value={program}
-              onChange={(e) => setProgram(e.target.value)}
+              onChange={(e) => {
+                setProgram(e.target.value);
+                const sp = programs.find(p => p.id == e.target.value);
+                setTotalSem(sp.duration);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded"
             >
               <option value="" disabled>Select a program</option>
@@ -146,12 +141,18 @@ const UploadForm = () => {
             <label className="block text-gray-700 font-bold mb-2">
               Semester:
             </label>
-            <input
-              type="text"
+            <select
               value={semester}
-              onChange={(e) => setSemester(e.target.value)}
+              onChange={(e) => {
+                setSemester(e.target.value);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded"
-            />
+            >
+              <option value="" disabled>Select Semester</option>
+              {([1,2,3,4,5,6,7,8].slice(0,totalSem*2).map(sem => (
+                <option value={sem} key={sem}>{sem}</option>
+              )))}
+            </select>
           </div>
           <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">
@@ -186,7 +187,7 @@ const UploadForm = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded"
             />
           </div>
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label className="block text-gray-700 font-bold mb-2">
               Optional:
             </label>
@@ -197,7 +198,7 @@ const UploadForm = () => {
               className="mr-2"
             />
             Is Optional
-          </div>
+          </div> */}
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           {loading && <p>Loading...</p>}
           <button
