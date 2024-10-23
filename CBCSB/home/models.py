@@ -1,8 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
-import math 
 from django.utils import timezone
 
 
@@ -25,6 +23,9 @@ class Batch(models.Model):
     def __str__(self) -> str:
         return f'{self.start_year.year} - {self.end_year.year}'
     
+    def get_students(self):
+        return self.student_set.all()
+    
     class Meta:
         verbose_name = "Batch"
         verbose_name_plural = "Batches"
@@ -33,14 +34,20 @@ class Department(models.Model):
     name = models.CharField(max_length=150)
 
     def __str__(self):
-        try:
+        if HOD.objects.filter(department=self).exists():
             hod = HOD.objects.get(department=self)
             return f"{self.name} ({hod.username})"
-        except HOD.DoesNotExist:
-            return self.name
+        else:
+            return f"{self.name} (No HOD)"
         
     def get_programs(self):
         return self.program_set.all()
+    
+    def get_courses(self):
+        return self.course_set.all()
+    
+    def get_students(self):
+        return self.student_set.all()
 
     class Meta:
         verbose_name = "Department"
@@ -57,6 +64,12 @@ class Program(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.department.name})"
+    
+    def get_courses(self):
+        return self.course_set.all()
+    
+    def get_students(self):
+        return self.student_set.all()
 
     class Meta:
         verbose_name = "Program"
@@ -72,6 +85,12 @@ class Course(models.Model):
         choices=year_opt, 
         help_text="Semester the course belongs to"
     )
+    batch = models.ManyToManyField(
+        Batch, 
+        related_name="courses", 
+        blank=True, 
+        help_text="Batch this course belongs to."
+    )
     department = models.ForeignKey(
         Department,
         verbose_name="Department Belong to this Course",
@@ -82,20 +101,20 @@ class Course(models.Model):
         verbose_name="Program Belong to this Course",
         on_delete=models.CASCADE,
     )
+    access_to = models.ManyToManyField("home.Student", related_name="Students have access to this course +", blank=True)
     
     def __str__(self) -> str:
-        return f'{self.name} | {self.code} | Sem:{self.semester} | {self.program}'
+        return f'{self.code} | {self.name} | Sem:{self.semester} | {self.program} | {self.batch}'
 
 class CourseStatus(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    txt = [
-        ("E", "Enrolled"),
-        ("P", "Pass"),
-        ("F", "Fail"),
-    ]
     status = models.CharField(
         max_length=50, 
-        choices=txt, 
+        choices=[
+            ("E", "Enrolled"),
+            ("P", "Pass"),
+            ("F", "Fail"),
+        ], 
         help_text="Status of the course"
     )
     semester = models.CharField(
@@ -118,6 +137,25 @@ class CourseStatus(models.Model):
     class Meta:
         verbose_name = "Course Item"
         verbose_name_plural = "Course Items"
+
+class SemReport(models.Model):
+    student = models.ForeignKey("home.Student", on_delete=models.CASCADE)
+    semester = models.CharField(
+        max_length=50, 
+        choices=year_opt, 
+        help_text="Semester the Report belongs to"
+    )
+    enrolled_courses = models.ManyToManyField(CourseStatus, related_name="SemesterReport", blank=True)
+    is_approved = models.BooleanField(default=False,help_text="Do the report approved by HOD?")
+    reason_for_rejection = models.TextField(blank=True, null=True)
+    
+    def __str__(self) -> str:
+        course_codes = [course.course.code for course in self.enrolled_courses.all()]
+        return f'{self.student.username} | Sem: {self.semester} | Courses: {course_codes}'
+    
+    class Meta:
+        verbose_name = "Semester Report"
+        verbose_name_plural = "Semester Reports"
 
 class HOD(User):
     department = models.OneToOneField(
@@ -148,23 +186,17 @@ class Student(User):
         Batch,
         on_delete=models.PROTECT
     )
-    courses = models.ManyToManyField(
-        Course,
-        related_name="students",
-        blank=True,
-        help_text="Courses this Student is enrolled in.",
-    )
-    joined_date = models.DateField(auto_now_add=True)
     sem = models.CharField(
         max_length=50,
         choices=year_opt,
-        help_text="Semester the student belongs to"
+        help_text="current Semester the student"
     )
-    enrolled_courses = models.ManyToManyField(CourseStatus, related_name="reports", blank=True)
-    
-    @property
-    def Enrolled(self):
-        return " | ".join([f"{str(x.course.name)} ({str(x.course.code)})" for x in self.enrolled_courses.all()]) if self.enrolled_courses.exists() else "None"
+    joined_date = models.DateField(auto_now_add=True)
+    reports = models.ManyToManyField(
+        "home.SemReport",
+        blank=True,
+        related_name="Student_history",
+    )
     
     def __str__(self) -> str:
         return f'{self.username}'
@@ -172,27 +204,3 @@ class Student(User):
     class Meta:
         verbose_name = "Student"
         verbose_name_plural = "Students"
-    
-class SemReport(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    semester = models.CharField(
-        max_length=50, 
-        choices=year_opt, 
-        help_text="Semester the Report belongs to"
-    )  
-    courses = models.ManyToManyField(CourseStatus, related_name="SemesterReport", blank=True)
-    
-    def __str__(self) -> str:
-        return f'{self.student.username} | Sem: {self.semester}'
-    
-    # def save(self, *args, **kwargs):
-    #     if self.courses.exists():
-    #         unique_courses = set(self.courses.all())
-    #         if len(unique_courses) != self.courses.count():
-    #             raise ValueError("Duplicate courses are not allowed.")
-        
-    #     super().save(*args, **kwargs)
-    
-    class Meta:
-        verbose_name = "Semester Report"
-        verbose_name_plural = "Semester Reports"

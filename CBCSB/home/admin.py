@@ -4,7 +4,7 @@ from . import models
 
 @admin.register(models.Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ["name"]
+    list_display = ["name","id"]
     search_fields = ["name"]
 
 @admin.register(models.Batch)
@@ -22,7 +22,7 @@ class ProgramAdmin(admin.ModelAdmin):
     
 @admin.register(models.Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['username','department',"batch","sem",'joined_date',"Enrolled"]
+    list_display = ['username','department',"batch","sem",'joined_date',]
     list_filter = ['department','sem',"batch"]
     
     search_fields = ["username", "email", "department__name"]
@@ -106,4 +106,4 @@ class CourseItemAdmin(admin.ModelAdmin):
 
 
 
-admin.site.site_header = "CBCS Admin"
+admin.site.site_header = "FOE Admin"

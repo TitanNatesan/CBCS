@@ -14,5 +14,6 @@ urlpatterns = [
     path("getCourses/",views.getCourses,name="GetCourses"),
     path("programs/",views.programs,name="Programs"),
     path("adminDash/",views.adminDashBoard),
+    path("studentblukregister/",views.StudentRegisterBulk.as_view(),name="student-register-bluk",),
     # path("studDash/"),
 ]

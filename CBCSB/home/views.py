@@ -1,14 +1,16 @@
+import pandas as pd
 from django.shortcuts import render
-from rest_framework import generics,status
-from django.shortcuts import get_object_or_404
+from django.db import IntegrityError
 from rest_framework.views import APIView
-from django.contrib.auth import authenticate,login
-from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.authtoken.models import Token
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework import generics,status
 from . import models, serializers,urls,utils
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import authenticate,login
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.permissions import AllowAny,IsAuthenticated
 
 # Create your views here.
 
@@ -264,7 +266,21 @@ def adminDashBoard(request):
         user = models.HOD.objects.get(username=request.user.username)
         programs = models.Program.objects.filter(department=user.department)
         pserial = serializers.ProgramSerial(programs,many=True)
-        return Response(pserial.data)
+        department = models.Department.objects.all()
+        batch = models.Batch.objects.all()
+        aprograms = models.Program.objects.all()
+        apserial = serializers.ProgramSerial(aprograms,many=True)
+        batchSerial = serializers.BatchSerializer(batch,many=True)
+        departSerial = serializers.DepartmentSerializer(department,many=True)
+        cont = {
+            "programs":pserial.data,
+            "allprograms":apserial.data,
+            "department": user.department.name,
+            "batch":batchSerial.data,
+            "availDepart":departSerial.data,
+        }
+        return Response(cont)
+
 
 
 @api_view(["GET"])
@@ -273,3 +289,56 @@ def studDashBoard(request):
     if request.method == "GET":
         
         pass
+    
+class StudentRegisterBulk(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = serializers.StudentUploadSerializer
+    
+    def create(self, request, *args, **kwargs):
+        if 'file' not in request.FILES:
+            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = request.FILES['file']
+
+        # Check if the uploaded file is an Excel file
+        if not uploaded_file.name.endswith(('.xlsx', '.xls')):
+            return Response({"error": "Uploaded file is not an Excel file."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Read the Excel file into a DataFrame
+            df = pd.read_excel(uploaded_file)
+            program = models.Program.objects.get(pk=request.data['program'])
+            batch = models.Batch.objects.get(pk=request.data['batch'])
+            semester = request.data['sem']
+            department = models.Department.objects.get(pk=request.user.hod.department.id)
+            
+            # Process each record in the DataFrame
+            message = {"success": [], "error": []}
+            for index, row in df.iterrows():
+                itm = row.to_dict()
+                data = {
+                    "username": itm['Username'],
+                    "email": itm["Email"],
+                    "department": department.id,
+                    "program": program.id,
+                    "batch": batch.id,
+                    "sem": semester,
+                    "first_name": itm["First Name"],
+                    "last_name": itm["Last Name"],
+                    "enrolled_courses": [],
+                    "password": itm["Password"]
+                }
+                try:
+                    studSerial = serializers.StudentSerializer(data=data)
+                    if studSerial.is_valid(raise_exception=True):  # Pass raise_exception=True for automatic validation errors
+                        print("yes Valid")
+                        studSerial.save()
+                        message['success'].append({"id": itm["Username"], "message": "Student Created"})
+                except IntegrityError as e:  # Catching IntegrityError for unique constraints
+                    message['error'].append({"id": itm["Username"], "error": str(e)})
+                except Exception as e:  # Catching other exceptions
+                    message['error'].append({"id": itm["Username"], "error": str(e)})
+
+            return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
