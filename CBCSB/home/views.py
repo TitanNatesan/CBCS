@@ -342,3 +342,4 @@ class StudentRegisterBulk(generics.CreateAPIView):
             return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
