@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import UploadForm from "./UploadForm";
 import StudentsList from "./StudentsList";
 import CoursesList from "./CoursesList";
+import StudentBulkRegister from "./Studentupload";
 
 const Page = () => {
   const [view, setView] = useState("upload");
@@ -15,6 +16,7 @@ const Page = () => {
         {view === "upload" && <UploadForm />}
         {view === "students" && <StudentsList />}
         {view === "courses" && <CoursesList />}
+        {view === "studentsupload" && <StudentBulkRegister />}
       </div>
     </div>
   );
