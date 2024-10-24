@@ -1,110 +1,117 @@
 "use client";
-import axios from "axios";
+
 import React, { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBook, faRightLong, faTrash } from "@fortawesome/free-solid-svg-icons";
+import axios from "axios";
+import { Book, ChevronRight, Trash2, LogOut } from "lucide-react";
 
-const Page: React.FC = () => {
+interface Student {
+  username: string;
+  email: string;
+  department: {
+    name: string;
+  };
+}
 
-  const [student, setStudent] = useState(null);
+interface Course {
+  id: number;
+  name: string;
+  code: string;
+  semester: string;
+  courseCredit: number;
+}
+
+export default function StudentDashboard() {
+  const [student, setStudent] = useState<Student | null>(null);
   const [view, setView] = useState("courses");
-  const [courses, setCourses] = useState([]);
-  const [selectedCourses, setSelectedCourses] = useState([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
   const [currentSem, setCurrentSem] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
 
-  const fetchCourses = async (sem) => {
+  const token = localStorage.getItem("token");
+
+  const fetchCourses = async (sem: number) => {
     setCurrentSem(sem);
     try {
-      const request = await axios.get(`http://127.0.0.1:8000/selectcourse/${sem}/`, {
-        headers: {
-          Authorization: `Token ${localStorage.getItem('token')}`
+      const response = await axios.get(
+        `http://127.0.0.1:8000/selectcourse/${sem}/`,
+        {
+          headers: { Authorization: `Token ${token}` },
         }
-      })
-      setCourses(request.data['avail_courses']);
-      for (let i = 0; i < request.data['avail_courses'].length; i++) {
-        if (selectedCourses.some((c) => c.id === request.data['avail_courses'][i].id)) {
-          setCourses(courses.filter((c) => c.id !== request.data['avail_courses'][i].id));
-        }
-      }
+      );
+      setCourses(
+        response.data["avail_courses"].filter(
+          (course: Course) => !selectedCourses.some((c) => c.id === course.id)
+        )
+      );
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 
   const fetchStudentDetails = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
-        headers: {
-          Authorization: `Token ${localStorage.getItem('token')}`
-        }
+        headers: { Authorization: `Token ${token}` },
       });
-      setStudent(response.data['student']);
-      setCurrentSem(response.data['sem']);
-      fetchCourses(response.data['sem']);;
+      setStudent(response.data["student"]);
+      setCurrentSem(response.data["sem"]);
+      fetchCourses(response.data["sem"]);
     } catch (error) {
       console.error(error);
     }
-  }
+  };
 
-  const addSelectedCourse = (course) => {
+  const addSelectedCourse = (course: Course) => {
     if (totalCredits + course.courseCredit > 30) {
-      alert("Cannot add more courses. Maximum credit limit reached.")
+      alert("Cannot add more courses. Maximum credit limit reached.");
       return;
-    } else if (!selectedCourses.some((c) => c.id === course.id)) {
-      setSelectedCourses([...selectedCourses, course]);
-      setTotalCredits(totalCredits + course.courseCredit);
-      setCourses(courses.filter((c) => c.id !== course.id));
-    } else {
-      alert('Course already added');
     }
-  }
+    setSelectedCourses((prev) => [...prev, course]);
+    setTotalCredits((prev) => prev + course.courseCredit);
+    setCourses((prev) => prev.filter((c) => c.id !== course.id));
+  };
 
-  const removeSelectedCourse = (course) => {
-    setSelectedCourses(selectedCourses.filter((c) => c.id !== course.id));
-    setTotalCredits(totalCredits - course.courseCredit);
-    if (course.semester === currentSem) {
-      setCourses([...courses, course]);
+  const removeSelectedCourse = (course: Course) => {
+    setSelectedCourses((prev) => prev.filter((c) => c.id !== course.id));
+    setTotalCredits((prev) => prev - course.courseCredit);
+    if (course.semester === currentSem.toString()) {
+      setCourses((prev) => [...prev, course]);
     }
-  }
+  };
 
   const handleSubmit = async () => {
     const course_ids = selectedCourses.map((course) => course.id);
     try {
-      const response = await axios.post("http://127.0.0.1:8000/selectcourse/1/", {
-        CourseIDs: course_ids
-      }, {
-        headers: {
-          Authorization: `Token ${localStorage.getItem('token')}`
-        }
-      })
+      const response = await axios.post(
+        "http://127.0.0.1:8000/selectcourse/1/",
+        { CourseIDs: course_ids },
+        { headers: { Authorization: `Token ${token}` } }
+      );
       console.log(response.data);
-      alert("Submitted")
+      alert("Courses submitted successfully");
     } catch (error) {
       console.error(error);
+      alert("Failed to submit courses");
     }
-  }
+  };
 
   const fetchEnrolledCourses = async () => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
-        headers: {
-          Authorization: `Token ${localStorage.getItem('token')}`
-        }
-      })
+        headers: { Authorization: `Token ${token}` },
+      });
       setEnrolledCourses(response.data.student.enrolled_courses);
-      console.log(response.data);
-      let tot = 0;
-      response.data.student.enrolled_courses.map((course) => {
-        tot += course.course.courseCredit;
-      })
+      const tot = response.data.student.enrolled_courses.reduce(
+        (acc: number, course: Course) => acc + course.courseCredit,
+        0
+      );
       setTotalCredits(tot);
     } catch (error) {
       console.error(error);
     }
-  }
-
+  };
 
   useEffect(() => {
     fetchStudentDetails();
@@ -112,235 +119,240 @@ const Page: React.FC = () => {
   }, [view]);
 
   return (
-    <div className="flex h-screen text-black overflow-y-hidden bg-gray-100">
-      <div className="hidden md:flex flex-col w-1/5 bg-gray-800">
-        <div className="flex items-center justify-center h-16 bg-gray-900">
-          <span className="text-white font-bold uppercase">Kahe Dashboard</span>
+    <div className="flex h-screen bg-gray-100">
+      <aside className="w-64 bg-white shadow-md">
+        <div className="p-4 bg-indigo-600 text-white">
+          <h1 className="text-xl font-bold">Course Registration</h1>
         </div>
-        <div className="flex flex-col mx-4 overflow-y-auto">
-          <div className="mt-4 bg-white shadow-md rounded-lg p-4">
-            {student ? (
-              <div className="space-y-4">
-                <div className="ml-4">
-
-                  <h3 className="text-lg font-semibold inline">Reg No: </h3>
-                  <p className="text-gray-600 inline">{student.username}</p>
-                  <br />
-                  <h3 className="text-lg font-semibold inline">E-mail: </h3>
-                  <p className="text-gray-600 inline">{student.email}</p>
-                </div>
-              </div>
-            ) : (
-              <p>No student data available</p>
-            )}
+        {student && (
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Reg No: {student.username}</h2>
+            <p className="text-sm text-gray-600">{student.email}</p>
+            <p className="text-sm font-medium mt-2">
+              Department of {student.department.name}
+            </p>
           </div>
-          <nav className="flex-1 px-2 py-4 bg-gray-800">
-            <a
-              href="#"
-              onClick={() => setView("courses")}
-              className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-            >
-              <FontAwesomeIcon icon={faBook} className="h-6 w-6 mr-2" />
-              Courses Enrollment
-            </a>
-            <a
-              href="#"
-              onClick={() => setView("EnrolledCourses")}
-              className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
-            >
-              <FontAwesomeIcon icon={faBook} className="h-6 w-6 mr-2" />
-              Enrolled Courses
-            </a>
+        )}
+        <nav className="p-4">
+          <button
+            onClick={() => setView("courses")}
+            className={`flex items-center w-full p-2 rounded ${
+              view === "courses"
+                ? "bg-indigo-100 text-indigo-600"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Book className="mr-2 h-5 w-5" />
+            Course Enrollment
+          </button>
+          <button
+            onClick={() => setView("EnrolledCourses")}
+            className={`flex items-center w-full p-2 rounded mt-2 ${
+              view === "EnrolledCourses"
+                ? "bg-indigo-100 text-indigo-600"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <Book className="mr-2 h-5 w-5" />
+            Enrolled Courses
+          </button>
+        </nav>
+      </aside>
 
-          </nav>
-        </div>
-      </div>
-
-      <div className="flex flex-col flex-1 overflow-y-auto">
-        <div className="p-6">
-          {view === "courses" && (
-            <div className="flex-col w-full justify-evenly">
-              <div className="flex gap-10">
-                <div className="flex-col w-1/2 ">
-                  <h1 className="font-bold text-xl inline">Available Courses</h1>
-                  <select name="semester" id="current_semester" className="ml-5" value={currentSem} onChange={(e) => { fetchCourses(e.target.value), setCurrentSem(e.target.value) }}>
-                    {Array.from({ length: 8 }, (_, i) => i + 1).map((semester) => (
-                      <option key={semester} value={semester} >
+      <main className="flex-1 p-8 overflow-auto">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+          Course Registration
+        </h1>
+        {student && (
+          <h2 className="text-xl font-semibold text-gray-700 mb-6">
+            Department of {student.department.name}
+          </h2>
+        )}
+        {view === "courses" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-gray-800">
+                Course Enrollment
+              </h3>
+              <div className="flex items-center space-x-4">
+                <label htmlFor="semester" className="font-medium text-gray-700">
+                  Semester:
+                </label>
+                <select
+                  id="semester"
+                  value={currentSem}
+                  onChange={(e) => fetchCourses(Number(e.target.value))}
+                  className="border rounded p-2 text-gray-700"
+                >
+                  {Array.from({ length: 8 }, (_, i) => i + 1).map(
+                    (semester) => (
+                      <option key={semester} value={semester}>
                         Semester {semester}
                       </option>
-                    ))}
-                  </select>
-                  <div className="overflow-x-auto mt-4 bg-white shadow-md rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            ID
-                          </th>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            Subject Name
-                          </th>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            Subject Code
-                          </th>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            Semester No.
-                          </th>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            Credits
-                          </th>
-                          <th className="py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider text-center">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {courses.length > 0 ?
-                          (
-                            courses.map((course) => (
-                              <tr key={course.id} >
-                                <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                                  {course.id}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-500">
-                                  {course.name}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-500">
-                                  {course.code}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-500">
-                                  {course.semester}
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-500">
-                                  {course.courseCredit}
-                                </td>
-                                <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-green-600" onClick={() => addSelectedCourse(course)}>
-                                  <FontAwesomeIcon icon={faRightLong} />
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="6" className="text-center">
-                                No courses available
-                              </td>
-                            </tr>
-                          )
-                        }
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div className="flex-col w-1/2 ">
-                  <h3 className="text-xl font-bold mb-4 inline">
-                    Enrolled Courses
-                  </h3>
-                  <p className="inline ml-10">{totalCredits}/30</p>
+                    )
+                  )}
+                </select>
+              </div>
+            </div>
 
-                  <div className="overflow-x-auto mt-4 bg-white shadow-md rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            ID
-                          </th>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Subject Name
-                          </th>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Subject Code
-                          </th>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Semester No.
-                          </th>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Credits
-                          </th>
-                          <th className="py-3 px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-xl font-semibold mb-4 text-gray-800">
+                  Available Courses
+                </h4>
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Code
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Credits
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {courses.map((course) => (
+                        <tr key={course.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.code}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.courseCredit}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => addSelectedCourse(course)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              <ChevronRight className="h-5 w-5" />
+                            </button>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {selectedCourses.length > 0 ?
-                          (selectedCourses.map((course) => (
-                            <tr key={course.id}>
-                              <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                                {course.id}
-                              </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
-                                {course.name}
-                              </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
-                                {course.code}
-                              </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
-                                {course.semester}
-                              </td>
-                              <td className="py-3 px-4 text-sm text-gray-500">
-                                {course.courseCredit}
-                              </td>
-                              <td className="text-sm text-gray-500 text-center hover:text-xl hover:text-red-600" onClick={() => removeSelectedCourse(course)}>
-                                <FontAwesomeIcon icon={faTrash} />
-                              </td>
-                            </tr>
-                          ))) : (
-                            <tr>
-                              <td colSpan="6" className="text-center">
-                                No courses Selected
-                              </td>
-                            </tr>
-                          )
-                        }
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <button
-                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 mt-10"
-                onClick={handleSubmit}
-              >
-                Submit
-              </button>
+
+              <div>
+                <h4 className="text-xl font-semibold mb-4 text-gray-800">
+                  Selected Courses
+                </h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  Total Credits: {totalCredits}/30
+                </p>
+                <div className="bg-white shadow rounded-lg overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Code
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Credits
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Action
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedCourses.map((course) => (
+                        <tr key={course.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.name}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.code}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                            {course.courseCredit}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <button
+                              onClick={() => removeSelectedCourse(course)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          )}
-          {view === "EnrolledCourses" && (
-            <div>
-              <h1 className="font-bold text-xl inline">Enrolled Courses</h1>
-              <table className="w-full border">
-                <thead>
+
+            <button
+              onClick={handleSubmit}
+              className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Submit Enrollment
+            </button>
+          </div>
+        )}
+
+        {view === "EnrolledCourses" && (
+          <div>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6">
+              Enrolled Courses
+            </h3>
+            <div className="bg-white shadow rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="border">Course Name</th>
-                    <th className="border">Course Code</th>
-                    <th className="border">Semester</th>
-                    <th className="border">Course Credit</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Course Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Course Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Semester
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Credits
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {enrolledCourses.length > 0 ? (
-                    enrolledCourses.map((course) => (
-                      <tr key={course.id}>
-                        <td className="border">{course.course.name}</td>
-                        <td className="border">{course.course.code}</td>
-                        <td className="border">{course.course.semester}</td>
-                        <td className="border">{course.course.courseCredit}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4">No courses available</td>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {enrolledCourses.map((course) => (
+                    <tr key={course.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {course.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {course.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {course.semester}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                        {course.courseCredit}
+                      </td>
                     </tr>
-                  )}
+                  ))}
                 </tbody>
               </table>
-
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </main>
     </div>
   );
-};
-
-export default Page;
+}

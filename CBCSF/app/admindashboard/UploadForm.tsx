@@ -1,48 +1,54 @@
+"use client";
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import {
-  Box,
-  Typography,
-  TextField,
-  Select,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  Button,
-  Paper,
-  Container,
-  Grid,
-  CircularProgress,
-} from "@mui/material";
+
+interface Program {
+  id: number;
+  name: string;
+  duration: number;
+  department: {
+    name: string;
+  };
+}
+
+interface Batch {
+  id: number;
+  start_year: number;
+  end_year: number;
+}
 
 export default function CourseRegistrationForm() {
-  const [semester, setSemester] = useState("");
-  const [totalSem, setTotalSem] = useState(4);
-  const [subjectName, setSubjectName] = useState("");
-  const [subjectCode, setSubjectCode] = useState("");
-  const [isOptional, setIsOptional] = useState(false);
-  const [courseCredit, setCourseCredit] = useState(0);
+  const [formData, setFormData] = useState({
+    program: "",
+    semester: "",
+    batch: "",
+    subjectName: "",
+    subjectCode: "",
+    courseCredit: 0,
+    isOptional: false,
+  });
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [program, setProgram] = useState("");
-  const [programs, setPrograms] = useState([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [department, setDepartment] = useState("");
-  const [allPrograms, setAllPrograms] = useState([]);
-  const [accessProgram, setAccessProgram] = useState("");
-  const [batchs, setBatchs] = useState([]);
+  const [allPrograms, setAllPrograms] = useState<Program[]>([]);
+  const [batchs, setBatchs] = useState<Batch[]>([]);
+  const [totalSem, setTotalSem] = useState(4);
+  const [selectedDepartments, setSelectedDepartments] = useState<number[]>([]);
 
   const token = localStorage.getItem("token");
 
-  const fetchPrograms = async () => {
+  const fetchPrograms = async (): Promise<void> => {
     try {
       const response = await axios.get("http://127.0.0.1:8000/adminDash/", {
         headers: { Authorization: `Token ${token}` },
       });
-      setPrograms(response.data['programs']);
-      setDepartment(response.data['department']);
-      setAllPrograms(response.data['allprograms']);
-      setBatchs(response.data['batch']);
+      setPrograms(response.data["programs"]);
+      setDepartment(response.data["department"]);
+      setAllPrograms(response.data["allprograms"]);
+      setBatchs(response.data["batch"]);
     } catch (error) {
       console.error("There was an error fetching the programs!", error);
       toast.error("Failed to fetch programs");
@@ -51,17 +57,44 @@ export default function CourseRegistrationForm() {
 
   useEffect(() => {
     fetchPrograms();
-  }, []);
+  }, []); // Empty array to prevent re-running on each render.
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+
+    if (name === "program") {
+      const selectedProgram = programs.find(
+        (p: Program) => p.id == Number(value)
+      );
+      setTotalSem(selectedProgram ? selectedProgram.duration : 8);
+    }
+  };
+
+  const handleToggle = (departmentId: number) => {
+    setSelectedDepartments((prev) =>
+      prev.includes(departmentId)
+        ? prev.filter((id) => id !== departmentId)
+        : [...prev, departmentId]
+    );
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setErrorMessage("");
-    if (!semester || !subjectName || !subjectCode) {
-      setErrorMessage("Please fill in all fields.");
+    if (!formData.semester || !formData.subjectName || !formData.subjectCode) {
+      setErrorMessage("Please fill in all required fields.");
       return;
     }
 
-    const semesterNumber = Number(semester);
+    const semesterNumber = Number(formData.semester);
     if (isNaN(semesterNumber) || semesterNumber <= 0) {
       setErrorMessage("Semester must be a positive number.");
       return;
@@ -74,198 +107,238 @@ export default function CourseRegistrationForm() {
         "http://127.0.0.1:8000/courses/",
         {
           course_id: 1,
-          semester,
-          name: subjectName,
-          code: subjectCode,
-          program: program,
-          courseCredit: courseCredit,
-          is_optional: isOptional,
+          semester: formData.semester,
+          name: formData.subjectName,
+          code: formData.subjectCode,
+          program: formData.program,
+          courseCredit: formData.courseCredit,
+          is_optional: formData.isOptional,
         },
         {
           headers: {
-            Authorization: `token ${token}`,
+            Authorization: `Token ${token}`,
           },
         }
       );
-      setSemester("");
-      setSubjectName("");
-      setSubjectCode("");
-      setIsOptional(false);
-      setCourseCredit(0);
-      if (response.statusText === "Created") {
+      setFormData({
+        program: "",
+        semester: "",
+        batch: "",
+        subjectName: "",
+        subjectCode: "",
+        courseCredit: 0,
+        isOptional: false,
+      });
+      setSelectedDepartments([]);
+
+      if (response.status === 201) {
         toast.success("Course created successfully", { position: "top-right" });
       } else {
         toast.error("Failed to create course");
       }
     } catch (error) {
       console.error("There was an error updating the course!", error);
-      setErrorMessage("There was an error updating the course. Please try again.");
+      setErrorMessage(
+        "There was an error updating the course. Please try again."
+      );
       toast.error("Failed to create course");
     } finally {
       setLoading(false);
     }
   };
 
-  const [selectedDepartments, setSelectedDepartments] = useState([]);
-  const [batch, setBatch] = useState("");
-
-  const handleToggle = (departmentId) => {
-    setSelectedDepartments((prev) => {
-      if (prev.includes(departmentId)) {
-        return prev.filter((id) => id !== departmentId); // Remove if already selected
-      } else {
-        return [...prev, departmentId]; // Add if not selected
-      }
-    });
-  };
-
-
-
   return (
-    <Container maxWidth="md">
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
-        <Box textAlign="center" mb={4}>
-          <Typography variant="h5" component="h1" color="primary" align="left" fontWeight="bold">
+    <div className="min-h-screen text-black bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-xl overflow-hidden">
+        <div className="px-4 py-5 sm:p-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">
             Department of {department}
-          </Typography>
-          <Typography variant="h6" color="text.secondary" align="left">
-            Course Registration
-          </Typography>
-        </Box>
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                label="Program"
-                value={program}
-                onChange={(e) => {
-                  setProgram(e.target.value);
-                  const selectedProgram = programs.find((p) => p.id == e.target.value);
-                  setTotalSem(selectedProgram?.duration || 8);
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select a program
-                </MenuItem>
-                {programs.map((program) => (
-                  <MenuItem key={program.id} value={program.id}>
-                    {program.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                label="Semester"
-                value={semester}
-                onChange={(e) => setSemester(e.target.value)}
-              >
-                <MenuItem value="" disabled>
-                  Select Semester
-                </MenuItem>
-                {[...Array(totalSem * 2)].map((_, index) => (
-                  <MenuItem key={index + 1} value={index + 1}>
-                    {index + 1}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                fullWidth
-                label="Batch"
-                value={batch}
-                onChange={(e) => {
-                  setBatch(e.target.value);
-                  const selectedProgram = programs.find((p) => p.id == e.target.value);
-                  setTotalSem(selectedProgram?.duration || 8);
-                }}
-              >
-                <MenuItem value="" disabled>
-                  Select a Batch
-                </MenuItem>
-                {batchs.map((batch) => (
-                  <MenuItem key={batch.id} value={batch.id}>
-                    {batch.start_year} / {batch.end_year}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Subject Name"
-                value={subjectName}
-                onChange={(e) => setSubjectName(e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Subject Code"
-                value={subjectCode}
-                onChange={(e) => setSubjectCode(e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Course Credit"
-                value={courseCredit}
-                onChange={(e) => setCourseCredit(e.target.value)}
-              />
-            </Grid>
-            <Box textAlign="center" m={4}>
-              <Typography variant="h6" color="text.secondary" align="left">
+          </h2>
+          <h3 className="text-lg text-gray-600 mb-6">Course Registration</h3>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+              <div>
+                <label
+                  htmlFor="program"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Program
+                </label>
+                <select
+                  id="program"
+                  name="program"
+                  value={formData.program}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                >
+                  <option value="">Select a program</option>
+                  {programs.map((program) => (
+                    <option key={program.id} value={program.id}>
+                      {program.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="semester"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Semester
+                </label>
+                <select
+                  id="semester"
+                  name="semester"
+                  value={formData.semester}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                >
+                  <option value="">Select Semester</option>
+                  {[...Array(totalSem * 2)].map((_, index) => (
+                    <option key={index + 1} value={index + 1}>
+                      {index + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+                <div>
+                <label
+                  htmlFor="batch"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Batch
+                </label>
+                <select
+                  id="batch"
+                  name="batch"
+                  value={formData.batch}
+                  onChange={handleInputChange}
+                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                >
+                  <option value="">Select a Batch</option>
+                  {batchs.map((batch) => {
+                  const startYear = batch.start_year.toString().split("-")[0];
+                  const endYear = batch.end_year.toString().split("-")[0];
+                  return (
+                    <option key={batch.id} value={batch.id}>
+                    {startYear} - {endYear}
+                    </option>
+                  );
+                  })}
+                </select>
+                </div>
+              <div>
+                <label
+                  htmlFor="subjectName"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Subject Name
+                </label>
+                <input
+                  type="text"
+                  id="subjectName"
+                  name="subjectName"
+                  value={formData.subjectName}
+                  onChange={handleInputChange}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="subjectCode"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Subject Code
+                </label>
+                <input
+                  type="text"
+                  id="subjectCode"
+                  name="subjectCode"
+                  value={formData.subjectCode}
+                  onChange={handleInputChange}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="courseCredit"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Course Credit
+                </label>
+                <input
+                  type="number"
+                  id="courseCredit"
+                  name="courseCredit"
+                  value={formData.courseCredit}
+                  onChange={handleInputChange}
+                  className="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
+                />
+              </div>
+            </div>
+            <div>
+              <h4 className="text-lg font-medium text-gray-900 mb-2">
                 Course Access
-              </Typography>
-            </Box>
-            <Typography variant="h6" color="text.secondary" align="left">
-              Select departments that can access this course
-            </Typography>
-            {allPrograms.map((program) => (
-              <FormControlLabel
-                key={program.id}
-                control={
-                  <Checkbox
-                    checked={selectedDepartments.includes(program.id)}
-                    onChange={() => handleToggle(program.id)}
-                    color="primary"
-                  />
-                }
-                label={program.name + " (" + program.department.name + ")"}
-              />
-            ))}
-
-            <Typography variant="h6" color="text.secondary" align="left">
-              Select semester of students who can access this course
-            </Typography>
-
-          </Grid>
-          {errorMessage && (
-            <Typography color="error" sx={{ mt: 2 }}>
-              {errorMessage}
-            </Typography>
-          )}
-          <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-            <Button
-              type="submit"
-              variant="contained"
-              color="primary"
-              disabled={loading}
-              sx={{ width: '50%' }}
-            >
-              {loading ? <CircularProgress size={24} /> : "Submit"}
-            </Button>
-          </Box>
-        </form>
-      </Paper>
-    </Container>
+              </h4>
+              <p className="text-sm text-gray-600 mb-2">
+                Select departments that can access this course:
+              </p>
+              <div className="space-y-2">
+                {allPrograms.map((program) => (
+                  <label key={program.id} className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-5 w-5 text-indigo-600"
+                      checked={selectedDepartments.includes(program.id)}
+                      onChange={() => handleToggle(program.id)}
+                    />
+                    <span className="ml-2 text-gray-700">
+                      {program.name} ({program.department.name})
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {errorMessage && (
+              <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
+            )}
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {loading ? (
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  "Submit"
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   );
 }
