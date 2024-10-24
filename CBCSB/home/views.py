@@ -52,18 +52,18 @@ class Login(APIView):
             return Response({"error": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST)
 
 class HODRegisterView(generics.CreateAPIView):
-    queryset = models.HOD.objects.all()
     serializer_class = serializers.HODSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Changed to AllowAny to allow posting without authentication
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if (models.HOD.objects.filter(username=request.user.username).exists() or models.Student.objects.filter(username=request.user.username).exists()):
+
+        if models.HOD.objects.filter(username=request.user.username).exists() or models.Student.objects.filter(username=request.user.username).exists():
             return Response({"error": "Only Admins can create a HOD."}, status=status.HTTP_403_FORBIDDEN)
 
         try:
-            department_id = request.data.get('department') 
+            department_id = request.data.get('department')
             department = get_object_or_404(models.Department, id=department_id)
             instance = serializer.save(department=department)
             return Response({
@@ -76,14 +76,14 @@ class HODRegisterView(generics.CreateAPIView):
             return Response({"error": "Department does not exist."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+
     def get(self, request, *args, **kwargs):
         if not (models.HOD.objects.filter(username=request.user.username).exists() or models.Student.objects.filter(username=request.user.username).exists()):
             hods = models.HOD.objects.all()
             serial = self.get_serializer(hods, many=True)
             return Response(serial.data)
         else:
-            return  Response("Only Admins Can View This Page",status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)    
+            return Response("Only Admins Can View This Page", status=status.HTTP_451_UNAVAILABLE_FOR_LEGAL_REASONS)
 
 class StudentRegisterView(generics.CreateAPIView):
     queryset = models.Student.objects.all()

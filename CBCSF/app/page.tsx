@@ -1,21 +1,22 @@
 "use client";
-import React from "react";
-import axios from "axios";
-import { useRouter } from "next/navigation";
 
-const Home = () => {
-  const [rollno, setRollno] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
+import React, { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+
+export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const Submitbro = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // Set loading to true
+    setLoading(true);
 
-    if (!rollno || !password) {
+    if (!username || !password) {
       setError("Both fields are required.");
       setLoading(false);
       return;
@@ -23,8 +24,8 @@ const Home = () => {
 
     try {
       const response = await axios.post("http://127.0.0.1:8000/login/", {
-        username: rollno,
-        password: password,
+        username,
+        password,
       });
 
       if (response.data["token"]) {
@@ -39,90 +40,153 @@ const Home = () => {
       }
     } catch (error) {
       console.error("Error during login:", error);
-      setError(error.response.data['error']);
+      setError(error.response?.data?.["error"] || "An error occurred");
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
   return (
-    <>
-      <div>
-        <h1 className="text-3xl -mb-20 pt-8 bg-gray-100  font-bold text-center text-gray-900">Faculty of Engineering</h1>
-
-        <div className="min-h-screen bg-gray-100 flex flex-col justify-center sm:px-6 lg:px-8">
-          <div className="sm:mx-auto sm:w-full sm:max-w-md">
-            <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
+      <div className="w-full max-w-md">
+        <h1 className="text-4xl font-bold text-center text-white mb-8 animate-fade-in">
+          Faculty of Engineering
+        </h1>
+        <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+          <div className="p-8">
+            <h2 className="text-2xl font-bold text-center text-gray-700 mb-6 animate-slide-down">
               Course Registration Login
             </h2>
-          </div>
-
-          <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-              {/* Error message display */}
-              <form className="space-y-6" onSubmit={Submitbro}>
-                <div>
-                  <label
-                    htmlFor="username"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Username
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="username"
-                      name="username"
-                      type="text"
-                      required
-                      className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="Enter your username"
-                      value={rollno}
-                      onChange={(e) => setRollno(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Password
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      required
-                      className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <button
-                    type="submit"
-                    disabled={loading} // Disable button during loading
-                    className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white ${loading
-                        ? "bg-gray-500"
-                        : "bg-indigo-600 hover:bg-indigo-700"
-                      } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                  >
-                    {loading ? "Signing in..." : "Sign in"}
-                  </button>
-                </div>
-              </form>
-            </div>
+            {error && (
+              <p className="text-red-500 text-sm text-center mb-4 animate-shake">
+                {error}
+              </p>
+            )}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="relative">
+                <input
+                  id="username"
+                  type="text"
+                  required
+                  className="w-full px-3 py-2 text-gray-700 border-b-2 border-gray-300 focus:border-blue-500 transition-colors bg-transparent outline-none peer"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+                <label
+                  htmlFor="username"
+                  className="absolute left-3 top-2 text-gray-600 transition-all duration-300 peer-focus:-top-6 peer-focus:text-sm peer-focus:text-blue-500 peer-valid:-top-6 peer-valid:text-sm peer-valid:text-blue-500"
+                >
+                  Username
+                </label>
+              </div>
+              <div className="relative">
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  className="w-full px-3 py-2 text-gray-700 border-b-2 border-gray-300 focus:border-blue-500 transition-colors bg-transparent outline-none peer"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <label
+                  htmlFor="password"
+                  className="absolute left-3 top-2 text-gray-600 transition-all duration-300 peer-focus:-top-6 peer-focus:text-sm peer-focus:text-blue-500 peer-valid:-top-6 peer-valid:text-sm peer-valid:text-blue-500"
+                >
+                  Password
+                </label>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  loading ? "opacity-50 cursor-not-allowed" : "animate-pulse"
+                }`}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Signing in...
+                  </span>
+                ) : (
+                  "Sign in"
+                )}
+              </button>
+            </form>
           </div>
         </div>
       </div>
-    </>
-  );
-};
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
 
-export default Home;
+        @keyframes slideDown {
+          from {
+            transform: translateY(-20px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          10%,
+          30%,
+          50%,
+          70%,
+          90% {
+            transform: translateX(-5px);
+          }
+          20%,
+          40%,
+          60%,
+          80% {
+            transform: translateX(5px);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out;
+        }
+
+        .animate-slide-down {
+          animation: slideDown 0.5s ease-out;
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+}
