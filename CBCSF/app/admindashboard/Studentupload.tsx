@@ -93,7 +93,7 @@ export default function StudentBulkRegister() {
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg mx-auto bg-white rounded-lg shadow-xl p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Upload Excel/CSV File for Student Registration
+          Upload Excel/CSV File for Course Registration
         </h2>
 
         <form onSubmit={handleSubmit}>

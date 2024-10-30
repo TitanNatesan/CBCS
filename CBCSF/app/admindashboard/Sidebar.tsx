@@ -7,7 +7,7 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
   return (
-    <div className="hidden md:flex flex-col w-64 bg-gray-800">
+    <div className="hidden md:flex h-full flex-col w-64 bg-gray-800">
       <div className="flex items-center justify-center h-16 bg-gray-900">
         <span className="text-white font-bold uppercase">Kahe Dashboard</span>
       </div>
@@ -39,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
             onClick={() => setView("studentsupload")}
             className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
           >
-            Students Upload
+            Course Upload
           </a> */}
         </nav>
       </div>

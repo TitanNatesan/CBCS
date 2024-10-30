@@ -36,6 +36,7 @@ const Navbar = () => {
                 className="h-10 w-auto"
               />
             </Link>
+            <h1 className="TEXT-GREEN-500">KARPAGAM ACADEMY OF HIGHER EDUCATION</h1>
           </div>
           <div className="flex items-center">
             <div className="flex-shrink-0">

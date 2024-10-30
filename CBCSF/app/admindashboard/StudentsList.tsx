@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Printer } from "lucide-react";
+import { ArrowLeft, Printer, ChevronDown, ChevronUp } from "lucide-react";
 import axios from "axios";
-import Image from "next/image";
 import PrintableStudentDetails from "./PrintableStudentDetails"; // Import your print component
 
 interface Student {
@@ -26,10 +25,19 @@ interface Student {
   }>;
 }
 
+interface BatchGroup {
+  [key: string]: Student[];
+}
+
 export default function StudentsList() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [batchGroups, setBatchGroups] = useState<BatchGroup>({});
+  const [expandedBatches, setExpandedBatches] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedBatch, setSelectedBatch] = useState<string>("all");
   const token = localStorage.getItem("token");
 
   const fetchStudents = async () => {
@@ -38,6 +46,7 @@ export default function StudentsList() {
         headers: { Authorization: `token ${token}` },
       });
       setStudents(response.data);
+      organizeBatchGroups(response.data);
     } catch (error) {
       console.error("Error fetching students", error);
     }
@@ -64,18 +73,18 @@ export default function StudentsList() {
 
   const generateFakeStudent = (sid: number): Student => ({
     id: sid,
-    username: "fake_username",
-    email: "fake_email@example.com",
-    phone: "1234567890",
-    address: "123 Fake Street",
+    username: "lokesh",
+    email: "lokesh07084@kahedu.edu.in",
+    phone: "7448359938",
+    address: "123  Street",
     department: {
-      name: "Fake Department",
+      name: "Computer Science and Engineering",
     },
     enrolled_courses: [
       {
         id: 1,
         course: {
-          name: "Fake Course 1",
+          name: "DBMS",
           code: "FC101",
           semester: "1",
           is_optional: false,
@@ -85,7 +94,7 @@ export default function StudentsList() {
       {
         id: 2,
         course: {
-          name: "Fake Course 2",
+          name: "Flat",
           code: "FC102",
           semester: "2",
           is_optional: true,
@@ -95,9 +104,44 @@ export default function StudentsList() {
     ],
   });
 
+  const getBatchFromUsername = (username: string) => {
+    // Assuming username format contains year like "21CSE001" or similar
+    const match = username.match(/^\d{2}/);
+    return match ? `20${match[0]}` : "Unknown";
+  };
+
+  const organizeBatchGroups = (studentList: Student[]) => {
+    const groups: BatchGroup = studentList.reduce(
+      (acc: BatchGroup, student) => {
+        const batch = getBatchFromUsername(student.username);
+        if (!acc[batch]) {
+          acc[batch] = [];
+        }
+        acc[batch].push(student);
+        return acc;
+      },
+      {}
+    );
+    setBatchGroups(groups);
+    // Expand the first batch by default
+    if (Object.keys(groups).length > 0) {
+      setExpandedBatches(new Set([Object.keys(groups)[0]]));
+    }
+  };
+
+  const toggleBatchExpansion = (batch: string) => {
+    const newExpanded = new Set(expandedBatches);
+    if (newExpanded.has(batch)) {
+      newExpanded.delete(batch);
+    } else {
+      newExpanded.add(batch);
+    }
+    setExpandedBatches(newExpanded);
+  };
+
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents]);
+  }, []);
 
   const handleBackToList = () => setSelectedStudent(null);
 
@@ -107,6 +151,7 @@ export default function StudentsList() {
       0
     );
   };
+
   const handlePrint = () => {
     if (selectedStudent) {
       const printWindow = window.open("", "_blank");
@@ -147,15 +192,74 @@ export default function StudentsList() {
     }
   };
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const BatchTable = ({
+    students,
+    batch,
+  }: {
+    students: Student[];
+    batch: string;
+  }) => {
+    const filteredStudents = students.filter(
+      (student) =>
+        student.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (filteredStudents.length === 0) return null;
+
+    return (
+      <div className="mb-6">
+        <div
+          className="bg-green-700 text-white p-3 rounded-t-lg flex justify-between items-center cursor-pointer"
+          onClick={() => toggleBatchExpansion(batch)}
+        >
+          <h2 className="text-lg font-semibold">
+            Batch {batch} ({filteredStudents.length} students)
+          </h2>
+          {expandedBatches.has(batch) ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </div>
+
+        {expandedBatches.has(batch) && (
+          <div className="bg-white rounded-b-lg shadow-lg overflow-hidden">
+            <table className="min-w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-2 px-4 text-left border">S.No</th>
+                  <th className="py-2 px-4 text-left border">Register No</th>
+                  <th className="py-2 px-4 text-left border">Email</th>
+                  <th className="py-2 px-4 text-left border">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredStudents.map((student, index) => (
+                  <tr key={student.id}>
+                    <td className="py-2 px-4 border">{index + 1}</td>
+                    <td className="py-2 px-4 border">{student.username}</td>
+                    <td className="py-2 px-4 border">{student.email}</td>
+                    <td className="py-2 px-4 border">
+                      <button
+                        onClick={() => fetchIndividualStudent(student.id)}
+                        className="text-green-700 hover:text-green-800 hover:underline"
+                      >
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-6xl text-black mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Header with KAHE branding */}
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-green-700">
           Faculty of Engineering
@@ -298,49 +402,46 @@ export default function StudentsList() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center mb-4 border rounded-lg overflow-hidden">
-                <input
-                  type="text"
-                  placeholder="Search by Register No or Email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="flex-1 p-2 outline-none"
-                />
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="py-2 px-4 text-left border">S.No</th>
-                      <th className="py-2 px-4 text-left border">
-                        Register No
-                      </th>
-                      <th className="py-2 px-4 text-left border">Email</th>
-                      <th className="py-2 px-4 text-left border">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredStudents.map((student, index) => (
-                      <tr key={student.id}>
-                        <td className="py-2 px-4 border">{index + 1}</td>
-                        <td className="py-2 px-4 border">{student.username}</td>
-                        <td className="py-2 px-4 border">{student.email}</td>
-                        <td className="py-2 px-4 border">
-                          <button
-                            onClick={() => fetchIndividualStudent(student.id)}
-                            className="text-green-700 hover:text-green-800 hover:underline"
-                          >
-                            View Details
-                          </button>
-                        </td>
-                      </tr>
+            <div className="mb-6">
+              <div className="flex gap-4 items-center">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search by Register No or Email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full p-2 border rounded-lg outline-none"
+                  />
+                </div>
+                <select
+                  value={selectedBatch}
+                  onChange={(e) => setSelectedBatch(e.target.value)}
+                  className="p-2 border rounded-lg outline-none bg-white"
+                >
+                  <option value="all">All Batches</option>
+                  {Object.keys(batchGroups)
+                    .sort()
+                    .map((batch) => (
+                      <option key={batch} value={batch}>
+                        Batch {batch}
+                      </option>
                     ))}
-                  </tbody>
-                </table>
+                </select>
               </div>
             </div>
+
+            {selectedBatch === "all"
+              ? Object.entries(batchGroups)
+                  .sort(([a], [b]) => b.localeCompare(a))
+                  .map(([batch, students]) => (
+                    <BatchTable key={batch} batch={batch} students={students} />
+                  ))
+              : batchGroups[selectedBatch] && (
+                  <BatchTable
+                    batch={selectedBatch}
+                    students={batchGroups[selectedBatch]}
+                  />
+                )}
           </motion.div>
         )}
       </AnimatePresence>
