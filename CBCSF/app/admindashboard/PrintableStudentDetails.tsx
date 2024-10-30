@@ -9,7 +9,7 @@ const PrintableStudentDetails = ({ student }) => {
     return courses.reduce(
       (total, enrolled) => total + enrolled.course.courseCredit,
       0
-    );
+    ); 
   };
 
   const courses = [

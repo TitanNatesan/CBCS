@@ -93,3 +93,9 @@ class StudentUploadSerializer(serializers.ModelSerializer):
         if not value.name.endswith(('.xlsx', '.xls')):
             raise serializers.ValidationError("Uploaded file is not an Excel file.")
         return value
+
+class CourseUploadSerializer(serializers.ModelSerializer):
+    file = serializers.FileField(required=True)
+    class Meta:
+        model = Course
+        field = ["name","code"]

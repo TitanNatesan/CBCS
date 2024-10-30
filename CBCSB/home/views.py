@@ -53,7 +53,7 @@ class Login(APIView):
 
 class HODRegisterView(generics.CreateAPIView):
     serializer_class = serializers.HODSerializer
-    permission_classes = [AllowAny]  # Changed to AllowAny to allow posting without authentication
+    permission_classes = [IsAuthenticated]  # Changed to AllowAny to allow posting without authentication
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -291,7 +291,7 @@ def studDashBoard(request):
         pass
     
 class StudentRegisterBulk(generics.CreateAPIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = serializers.StudentUploadSerializer
     
     def create(self, request, *args, **kwargs):
@@ -343,3 +343,49 @@ class StudentRegisterBulk(generics.CreateAPIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+class CourseUploadBluk(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.CourseUploadSerializer
+    
+    def create(self, request, *args, **kwargs):
+        if 'file' not in request.FILES:
+            return Response({"error": "No file uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = request.FILES['file']
+
+        # Check if the uploaded file is an Excel file
+        if not uploaded_file.name.endswith(('.xlsx', '.xls')):
+            return Response({"error": "Uploaded file is not an Excel file."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Read the Excel file into a DataFrame
+            df = pd.read_excel(uploaded_file)
+            department = models.Department.objects.get(pk=request.user.hod.department.id)
+            
+            # Process each record in the DataFrame
+            message = {"success": [], "error": []}
+            for index, row in df.iterrows():
+                itm = row.to_dict()
+                data = {
+                    "name": itm['Course Name'],
+                    "code": itm["Course Code"],
+                    "is_optional": itm["Optional"],
+                    "courseCredit": itm["Credit"],
+                    "semester": itm["Semester"],
+                    "department": department.id,
+                    "program": itm["Program"]
+                }
+                try:
+                    courseSerial = serializers.CourseSerial(data=data)
+                    if courseSerial.is_valid(raise_exception=True):  # Pass raise_exception=True for automatic validation errors
+                        print("yes Valid")
+                        courseSerial.save()
+                        message['success'].append({"id": itm["Course Code"], "message": "Course Created"})
+                except IntegrityError as e:  # Catching IntegrityError for unique constraints
+                    message['error'].append({"id": itm["Course Code"], "error": str(e)})
+                except Exception as e:  # Catching other exceptions
+                    message['error'].append({"id": itm["Course Code"], "error": str(e)})
+
+            return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
