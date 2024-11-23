@@ -283,12 +283,6 @@ def adminDashBoard(request):
 
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def studDashBoard(request):
-    if request.method == "GET":
-        
-        pass
     
 class StudentRegisterBulk(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
@@ -389,3 +383,22 @@ class CourseUploadBluk(generics.CreateAPIView):
             return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET"])
+def fake(request):
+    studentdata = utils.students
+    for data in studentdata:
+        serializer = serializers.StudentSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+    return Response("Fake")
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def studDashBoard(request):
+    if request.method == "GET":
+        
+        pass
