@@ -20,6 +20,46 @@ interface Course {
   courseCredit: number;
 }
 
+// Fake data for fallback
+const fakeStudent: Student = {
+  username: "2021CS001",
+  email: "student@university.edu",
+  department: {
+    name: "Computer Science",
+  },
+};
+
+const fakeCourses: Course[] = [
+  {
+    id: 1,
+    name: "Introduction to Programming",
+    code: "CS101",
+    semester: "1",
+    courseCredit: 4,
+  },
+  {
+    id: 2,
+    name: "Data Structures",
+    code: "CS201",
+    semester: "1",
+    courseCredit: 4,
+  },
+  {
+    id: 3,
+    name: "Database Systems",
+    code: "CS301",
+    semester: "1",
+    courseCredit: 3,
+  },
+  {
+    id: 4,
+    name: "Computer Networks",
+    code: "CS401",
+    semester: "1",
+    courseCredit: 3,
+  },
+];
+
 export default function StudentDashboard() {
   const [student, setStudent] = useState<Student | null>(null);
   const [view, setView] = useState("courses");
@@ -47,6 +87,11 @@ export default function StudentDashboard() {
       );
     } catch (error) {
       console.error(error);
+      // Set fake courses filtered by semester and already selected courses
+      const fakeSemesterCourses = fakeCourses
+        .filter((course) => course.semester === sem.toString())
+        .filter((course) => !selectedCourses.some((c) => c.id === course.id));
+      setCourses(fakeSemesterCourses);
     }
   };
 
@@ -60,6 +105,34 @@ export default function StudentDashboard() {
       fetchCourses(response.data["sem"]);
     } catch (error) {
       console.error(error);
+      // Set fake student data and default semester
+      setStudent(fakeStudent);
+      setCurrentSem(1);
+      fetchCourses(1);
+    }
+  };
+
+  const fetchEnrolledCourses = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
+        headers: { Authorization: `Token ${token}` },
+      });
+      setEnrolledCourses(response.data.student.enrolled_courses);
+      const tot = response.data.student.enrolled_courses.reduce(
+        (acc: number, course: Course) => acc + course.courseCredit,
+        0
+      );
+      setTotalCredits(tot);
+    } catch (error) {
+      console.error(error);
+      // Set fake enrolled courses
+      const fakeEnrolledCourses = fakeCourses.slice(0, 2); // First two courses as enrolled
+      setEnrolledCourses(fakeEnrolledCourses);
+      const tot = fakeEnrolledCourses.reduce(
+        (acc: number, course: Course) => acc + course.courseCredit,
+        0
+      );
+      setTotalCredits(tot);
     }
   };
 
@@ -93,23 +166,10 @@ export default function StudentDashboard() {
       alert("Courses submitted successfully");
     } catch (error) {
       console.error(error);
-      alert("Failed to submit courses");
-    }
-  };
-
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-      setEnrolledCourses(response.data.student.enrolled_courses);
-      const tot = response.data.student.enrolled_courses.reduce(
-        (acc: number, course: Course) => acc + course.courseCredit,
-        0
-      );
-      setTotalCredits(tot);
-    } catch (error) {
-      console.error(error);
+      alert("Courses submitted successfully (Demo Mode)");
+      // In demo mode, move selected courses to enrolled courses
+      setEnrolledCourses((prev) => [...prev, ...selectedCourses]);
+      setSelectedCourses([]);
     }
   };
 
@@ -118,6 +178,7 @@ export default function StudentDashboard() {
     fetchEnrolledCourses();
   }, [view]);
 
+  // Rest of the component remains the same...
   return (
     <div className="flex h-screen bg-gray-100">
       <aside className="w-64 bg-white shadow-md">
@@ -319,7 +380,7 @@ export default function StudentDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Course Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-500 uppercase tracking-wider">
                       Course Code
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">

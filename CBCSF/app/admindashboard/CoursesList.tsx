@@ -70,6 +70,7 @@ export default function CoursesList() {
 
   return (
     <div className="max-w-6xl text-black mx-auto p-6">
+      <h1 className="text-3xl font-bold text-gray-800 mb-6">Department of Computer Science and Engineering</h1>
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Courses List</h1>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">

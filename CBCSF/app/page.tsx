@@ -47,8 +47,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-      <div className="w-full max-w-md">
+    <div
+      className="relative min-h-screen flex flex-col justify-center items-center bg-cover bg-center p-4"
+      style={{
+        backgroundImage:
+          'url("https://kahedu.edu.in/n/wp-content/uploads/2023/02/KAHE-Campus-Life_-What-to-Expect.jpg")',
+      }}
+    >
+      {/* Dark Overlay */}
+      <div className="absolute inset-0 bg-black opacity-50"></div>
+
+      {/* Content */}
+      <div className="relative w-full max-w-md z-10">
         <h1 className="text-4xl font-bold text-center text-white mb-8 animate-fade-in">
           Faculty of Engineering
         </h1>
@@ -134,6 +144,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
       <style jsx global>{`
         @keyframes fadeIn {
           from {
