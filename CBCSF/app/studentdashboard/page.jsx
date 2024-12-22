@@ -27,7 +27,7 @@ export default function StudentDashboard() {
       console.log(response.data);
       setResponseData(response.data);
       setCourses(response.data.avail_courses);
-      setSelectedCourses(response.data.enrolled_courses);
+      setSelectedCourses(response.data.enrolled_courses.map((enrolled) => enrolled.course));
       setEnrolledCourses(response.data.enrolled_courses);
     } catch (error) {
       console.error(error);
@@ -39,6 +39,7 @@ export default function StudentDashboard() {
       alert("Cannot add more courses. Maximum credit limit reached.");
       return;
     }
+    console.log(course);
     setSelectedCourses((prev) => [...prev, course]);
     setTotalCredits((prev) => prev + course.courseCredit);
     setCourses((prev) => prev.filter((c) => c.id !== course.id));
@@ -67,6 +68,12 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchDetails();
   }, [view]);
+  
+  useEffect(()=>{
+    console.log({courses: courses});
+    console.log({selectedCourses: selectedCourses});
+    console.log({enrolledCourses: enrolledCourses});
+  })
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -219,13 +226,13 @@ export default function StudentDashboard() {
                       {selectedCourses.map((course) => (
                         <tr key={course.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.course.name}
+                            {course.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.course.code}
+                            {course.code}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.course.courseCredit}
+                            {course.courseCredit}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
