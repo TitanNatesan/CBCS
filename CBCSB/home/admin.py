@@ -66,10 +66,9 @@ class CourseAdmin(admin.ModelAdmin):
     search_fields = ['name','code']
     list_display = ["name", "code", "program","department",'semester',"id"]
     
-    actions =[
-        'Set_Optional',
-        "Set_Compulsory",
-    ]
+    actions =['Set_Optional',"Set_Compulsory",]
+
+    
     
     def Set_Optional(self,request,queryset):
         queryset.update(is_optional=True)

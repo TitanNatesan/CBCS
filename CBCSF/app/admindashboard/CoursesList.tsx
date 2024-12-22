@@ -13,38 +13,26 @@ interface Course {
     id: number;
     name: string;
   };
+  batch: [
+    {
+      start: number,
+      end: number
+    }
+  ]
 }
 
-export default function CoursesList() {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+export default function CoursesList({ course }) {
+  const [courses, setCourses] = useState<Course[]>(course);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>(course);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
   const [selectedProgram, setSelectedProgram] = useState<string>("");
 
-  const token = localStorage.getItem("token");
+  useEffect(()=>{
+    setCourses(course);
+    setFilteredCourses(course);
+    console.log(course)
+  },[course])
 
-  const fetchCourses = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/courses/", {
-        headers: { Authorization: `token ${token}` },
-      });
-      setCourses(response.data);
-      setFilteredCourses(response.data);
-    } catch (error: any) {
-      console.error("Error fetching courses", error);
-      if (error.response) {
-        alert(`Error: ${error.response.status} - ${error.response.data}`);
-      } else if (error.request) {
-        alert("Error: No response from server.");
-      } else {
-        alert("Error: " + error.message);
-      }
-    }
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, []);
 
   useEffect(() => {
     let filtered = courses;
@@ -97,6 +85,9 @@ export default function CoursesList() {
               </option>
             ))}
           </select>
+
+<p className="text-black">add filter based on batch also</p>
+
         </div>
         <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
           {filteredCourses.length} courses
@@ -121,6 +112,9 @@ export default function CoursesList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Program
               </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Batch
+              </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -142,6 +136,11 @@ export default function CoursesList() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {course.program.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {course.batch.map((bat)=>(
+                      <p className="text-black">{bat.start}-{bat.end}</p>
+                    ))}
                   </td>
                 </tr>
               ))}

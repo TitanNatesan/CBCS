@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 # Create your models here
@@ -17,8 +18,8 @@ year_opt = (
     )
 
 class Batch(models.Model):
-    start_year = models.DateField(auto_now=False, auto_now_add=False)
-    end_year = models.DateField(auto_now=False, auto_now_add=False)
+    start_year = models.DateField(auto_now=False, auto_now_add=False, )
+    end_year = models.DateField(auto_now=False, auto_now_add=False,)
     
     def __str__(self) -> str:
         return f'{self.start_year.year} - {self.end_year.year}'
@@ -26,9 +27,38 @@ class Batch(models.Model):
     def get_students(self):
         return self.student_set.all()
     
+    def clean(self):
+        # Check if a batch with the same start and end years already exists
+        if Batch.objects.filter(
+            start_year__year=self.start_year.year,
+            end_year__year=self.end_year.year
+        ).exclude(
+            pk=self.pk
+        ).exists():
+            raise ValidationError(f"A batch with start year {self.start_year.year} and end year {self.end_year.year} already exists.")
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    @property
+    def start(self):
+        return self.start_year.year
+    
+    @property
+    def end(self):
+        return self.end_year.year
+    
+    @property
+    def total_students(self):
+        return self.student_set.count()
+    
+
+    
     class Meta:
         verbose_name = "Batch"
         verbose_name_plural = "Batches"
+        unique_together = ('start_year', 'end_year')
         
 class Department(models.Model):
     name = models.CharField(max_length=150)
@@ -42,10 +72,8 @@ class Department(models.Model):
         
     def get_programs(self):
         return self.program_set.all()
-    
     def get_courses(self):
         return self.course_set.all()
-    
     def get_students(self):
         return self.student_set.all()
 
@@ -67,7 +95,6 @@ class Program(models.Model):
     
     def get_courses(self):
         return self.course_set.all()
-    
     def get_students(self):
         return self.student_set.all()
 
@@ -77,10 +104,10 @@ class Program(models.Model):
 
 class Course(models.Model):
     name = models.CharField(max_length=50)
-    code = models.CharField(max_length=10)
-    is_optional = models.BooleanField(default=False)
+    code = models.CharField(max_length=10, unique=True)
+    is_optional = models.BooleanField(default=False,verbose_name="Elective ")
     courseCredit = models.IntegerField(default=0)
-    semester = models.CharField(
+    semester = models.CharField( 
         max_length=50, 
         choices=year_opt, 
         help_text="Semester the course belongs to"
@@ -166,6 +193,10 @@ class HOD(User):
     
     def __str__(self) -> str:
         return f'{self.username}'
+    
+    @property
+    def programs(self):
+        return self.department.get_programs()
 
     class Meta:
         verbose_name = "Head of Department"
@@ -200,6 +231,13 @@ class Student(User):
     
     def __str__(self) -> str:
         return f'{self.username}'
+    
+    @property
+    def enrolled_courses(self):
+        current_sem_report = self.semreport_set.filter(semester=self.sem).first()
+        if current_sem_report:
+            return current_sem_report.enrolled_courses.all()
+        return []
     
     class Meta:
         verbose_name = "Student"

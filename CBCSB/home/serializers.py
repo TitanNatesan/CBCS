@@ -20,7 +20,7 @@ class HODSerializer(serializers.ModelSerializer):
 class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
-        fields = "__all__"
+        fields = ["id",'start','end',"total_students"]
         
 class ProgramSerial(serializers.ModelSerializer):
     department = DepartmentSerializer()
@@ -39,6 +39,19 @@ class CourseSerial(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'name', 'code',"courseCredit", 'is_optional', 'semester',"program"]
+
+class HodCourseSerial(serializers.ModelSerializer):
+    batch = BatchSerializer(many=True)
+    program = ProgramSerial()
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'code', "courseCredit", 'semester', "program", "department","batch"]
+
+class BulkUploadCourses(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'code', "courseCredit", 'semester', "program", "department","batch"]
+        
 
 class CourseItemSerial(serializers.ModelSerializer):
     course = CourseSerializer()

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import BulkUpload from "./bulkupload";
 
 interface Program {
   id: number;
@@ -15,8 +16,8 @@ interface Program {
 
 interface Batch {
   id: number;
-  start_year: number;
-  end_year: number;
+  start: number;
+  end: number;
 }
 
 export default function CourseRegistrationForm() {
@@ -217,8 +218,8 @@ export default function CourseRegistrationForm() {
                 >
                   <option value="">Select a Batch</option>
                   {batchs.map((batch) => {
-                  const startYear = batch.start_year.toString().split("-")[0];
-                  const endYear = batch.end_year.toString().split("-")[0];
+                  const startYear = batch.start.toString().split("-")[0];
+                  const endYear = batch.end.toString().split("-")[0];
                   return (
                     <option key={batch.id} value={batch.id}>
                     {startYear} - {endYear}
@@ -337,6 +338,7 @@ export default function CourseRegistrationForm() {
               </button>
             </div>
           </form>
+          <BulkUpload/>
         </div>
       </div>
     </div>

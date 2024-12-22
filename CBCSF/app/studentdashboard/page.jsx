@@ -4,66 +4,37 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Book, ChevronRight, Trash2, LogOut } from "lucide-react";
 
-interface Student {
-  username: string;
-  email: string;
-  department: {
-    name: string;
-  };
-}
-
-interface Course {
-  id: number;
-  name: string;
-  code: string;
-  semester: string;
-  courseCredit: number;
-}
 
 export default function StudentDashboard() {
-  const [student, setStudent] = useState<Student | null>(null);
+  const [student, setStudent] = useState(null);
   const [view, setView] = useState("courses");
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
   const [currentSem, setCurrentSem] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
-  const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [responseData, setResponseData] = useState({
+    department: "",
+  });
 
   const token = localStorage.getItem("token");
 
-  const fetchCourses = async (sem: number) => {
-    setCurrentSem(sem);
+  const fetchDetails = async () => {
     try {
-      const response = await axios.get(
-        `http://127.0.0.1:8000/selectcourse/${sem}/`,
-        {
-          headers: { Authorization: `Token ${token}` },
-        }
-      );
-      setCourses(
-        response.data["avail_courses"].filter(
-          (course: Course) => !selectedCourses.some((c) => c.id === course.id)
-        )
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchStudentDetails = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
+      const response = await axios.get("http://127.0.0.1:8000/studDash/", {
         headers: { Authorization: `Token ${token}` },
       });
-      setStudent(response.data["student"]);
-      setCurrentSem(response.data["sem"]);
-      fetchCourses(response.data["sem"]);
+      console.log(response.data);
+      setResponseData(response.data);
+      setCourses(response.data.avail_courses);
+      setSelectedCourses(response.data.enrolled_courses);
+      setEnrolledCourses(response.data.enrolled_courses);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const addSelectedCourse = (course: Course) => {
+  const addSelectedCourse = (course) => {
     if (totalCredits + course.courseCredit > 30) {
       alert("Cannot add more courses. Maximum credit limit reached.");
       return;
@@ -73,7 +44,7 @@ export default function StudentDashboard() {
     setCourses((prev) => prev.filter((c) => c.id !== course.id));
   };
 
-  const removeSelectedCourse = (course: Course) => {
+  const removeSelectedCourse = (course) => {
     setSelectedCourses((prev) => prev.filter((c) => c.id !== course.id));
     setTotalCredits((prev) => prev - course.courseCredit);
     if (course.semester === currentSem.toString()) {
@@ -81,41 +52,20 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     const course_ids = selectedCourses.map((course) => course.id);
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/selectcourse/1/",
-        { CourseIDs: course_ids },
-        { headers: { Authorization: `Token ${token}` } }
-      );
-      console.log(response.data);
-      alert("Courses submitted successfully");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to submit courses");
-    }
-  };
-
-  const fetchEnrolledCourses = async () => {
-    try {
-      const response = await axios.get("http://127.0.0.1:8000/getdetails/", {
-        headers: { Authorization: `Token ${token}` },
-      });
-      setEnrolledCourses(response.data.student.enrolled_courses);
-      const tot = response.data.student.enrolled_courses.reduce(
-        (acc: number, course: Course) => acc + course.courseCredit,
-        0
-      );
-      setTotalCredits(tot);
-    } catch (error) {
-      console.error(error);
-    }
+    axios.post("http://localhost:8000/studDash/", { CourseIDs: course_ids, type: "enroll" }, { headers: { Authorization: `Token ${token}` } })
+      .then((res) => {
+        console.log(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+    fetchDetails();
   };
 
   useEffect(() => {
-    fetchStudentDetails();
-    fetchEnrolledCourses();
+    fetchDetails();
   }, [view]);
 
   return (
@@ -124,34 +74,30 @@ export default function StudentDashboard() {
         <div className="p-4 bg-indigo-600 text-white">
           <h1 className="text-xl font-bold">Course Registration</h1>
         </div>
-        {student && (
-          <div className="p-4 border-b">
-            <h2 className="font-semibold">Reg No: {student.username}</h2>
-            <p className="text-sm text-gray-600">{student.email}</p>
-            <p className="text-sm font-medium mt-2">
-              Department of {student.department.name}
-            </p>
-          </div>
-        )}
+        <div className="p-4 border-b">
+          <p className="text-sm font-medium mt-2 text-black">Reg No: {responseData.username}</p>
+          <p className="text-sm font-medium mt-2 text-black">{responseData.first_name + " " + responseData.last_name}</p>
+          <p className="text-sm font-medium mt-2 text-black">Batch: {responseData.batch}</p>
+          <p className="text-sm font-medium mt-2 text-black">Current Semester: {responseData.current_sem}</p>
+          <p className="text-sm font-medium mt-2 text-black">Program: {responseData.program}</p>
+        </div>
         <nav className="p-4">
           <button
             onClick={() => setView("courses")}
-            className={`flex items-center w-full p-2 rounded ${
-              view === "courses"
+            className={`flex items-center w-full p-2 rounded ${view === "courses"
                 ? "bg-indigo-100 text-indigo-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Book className="mr-2 h-5 w-5" />
             Course Enrollment
           </button>
           <button
             onClick={() => setView("EnrolledCourses")}
-            className={`flex items-center w-full p-2 rounded mt-2 ${
-              view === "EnrolledCourses"
+            className={`flex items-center w-full p-2 rounded mt-2 ${view === "EnrolledCourses"
                 ? "bg-indigo-100 text-indigo-600"
                 : "text-gray-700 hover:bg-gray-100"
-            }`}
+              }`}
           >
             <Book className="mr-2 h-5 w-5" />
             Enrolled Courses
@@ -160,6 +106,7 @@ export default function StudentDashboard() {
       </aside>
 
       <main className="flex-1 p-8 overflow-auto">
+        <h1 className="text-xl font-semibold text-gray-700 mb-6">Department of <b className="text-blue-700">{responseData.department}</b></h1>
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           Course Registration
         </h1>
@@ -168,12 +115,10 @@ export default function StudentDashboard() {
             Department of {student.department.name}
           </h2>
         )}
+
         {view === "courses" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-2xl font-bold text-gray-800">
-                Course Enrollment
-              </h3>
               <div className="flex items-center space-x-4">
                 <label htmlFor="semester" className="font-medium text-gray-700">
                   Semester:
@@ -181,7 +126,7 @@ export default function StudentDashboard() {
                 <select
                   id="semester"
                   value={currentSem}
-                  onChange={(e) => fetchCourses(Number(e.target.value))}
+                  // onChange={(e) => fetchCourses(Number(e.target.value))}
                   className="border rounded p-2 text-gray-700"
                 >
                   {Array.from({ length: 8 }, (_, i) => i + 1).map(
@@ -274,13 +219,13 @@ export default function StudentDashboard() {
                       {selectedCourses.map((course) => (
                         <tr key={course.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.name}
+                            {course.course.name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.code}
+                            {course.course.code}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.courseCredit}
+                            {course.course.courseCredit}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
@@ -312,6 +257,10 @@ export default function StudentDashboard() {
             <h3 className="text-2xl font-bold text-gray-800 mb-6">
               Enrolled Courses
             </h3>
+            <p className="text-black">
+              api la irunthu report nu onnu varum ,
+              adhula irunthu student semester report full ah varum yeallathaium history type la runder panniru
+            </p>
             <div className="bg-white shadow rounded-lg overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -334,16 +283,16 @@ export default function StudentDashboard() {
                   {enrolledCourses.map((course) => (
                     <tr key={course.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {course.name}
+                        {course.course.name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {course.code}
+                        {course.course.code}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {course.semester}
+                        {course.course.semester}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                        {course.courseCredit}
+                        {course.course.courseCredit}
                       </td>
                     </tr>
                   ))}

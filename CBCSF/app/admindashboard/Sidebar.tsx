@@ -34,13 +34,13 @@ const Sidebar: React.FC<SidebarProps> = ({ setView }) => {
           >
             View Courses
           </a>
-          {/* <a
+          <a
             href="#"
-            onClick={() => setView("studentsupload")}
+            onClick={() => setView("PaBv")}
             className="flex items-center px-4 py-2 mt-2 text-gray-100 hover:bg-gray-700"
           >
-            Students Upload
-          </a> */}
+            Programs and Batch
+          </a>
         </nav>
       </div>
     </div>
