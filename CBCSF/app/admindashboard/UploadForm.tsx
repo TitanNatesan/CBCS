@@ -43,9 +43,12 @@ export default function CourseRegistrationForm() {
 
   const fetchPrograms = async (): Promise<void> => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/adminDash/", {
-        headers: { Authorization: `Token ${token}` },
-      });
+      const response = await axios.get(
+        "http://192.168.87.151:8000/adminDash/",
+        {
+          headers: { Authorization: `Token ${token}` },
+        }
+      );
       setPrograms(response.data["programs"]);
       setDepartment(response.data["department"]);
       setAllPrograms(response.data["allprograms"]);
@@ -105,7 +108,7 @@ export default function CourseRegistrationForm() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/courses/",
+        "http://192.168.87.151:8000/courses/",
         {
           course_id: 1,
           semester: formData.semester,
@@ -202,7 +205,7 @@ export default function CourseRegistrationForm() {
                   ))}
                 </select>
               </div>
-                <div>
+              <div>
                 <label
                   htmlFor="batch"
                   className="block text-sm font-medium text-gray-700"
@@ -218,16 +221,16 @@ export default function CourseRegistrationForm() {
                 >
                   <option value="">Select a Batch</option>
                   {batchs.map((batch) => {
-                  const startYear = batch.start.toString().split("-")[0];
-                  const endYear = batch.end.toString().split("-")[0];
-                  return (
-                    <option key={batch.id} value={batch.id}>
-                    {startYear} - {endYear}
-                    </option>
-                  );
+                    const startYear = batch.start.toString().split("-")[0];
+                    const endYear = batch.end.toString().split("-")[0];
+                    return (
+                      <option key={batch.id} value={batch.id}>
+                        {startYear} - {endYear}
+                      </option>
+                    );
                   })}
                 </select>
-                </div>
+              </div>
               <div>
                 <label
                   htmlFor="subjectName"
@@ -277,29 +280,7 @@ export default function CourseRegistrationForm() {
                 />
               </div>
             </div>
-            <div>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
-                Course Access
-              </h4>
-              <p className="text-sm text-gray-600 mb-2">
-                Select departments that can access this course:
-              </p>
-              <div className="space-y-2">
-                {allPrograms.map((program) => (
-                  <label key={program.id} className="inline-flex items-center">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox h-5 w-5 text-indigo-600"
-                      checked={selectedDepartments.includes(program.id)}
-                      onChange={() => handleToggle(program.id)}
-                    />
-                    <span className="ml-2 text-gray-700">
-                      {program.name} ({program.department.name})
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
+
             {errorMessage && (
               <p className="text-sm text-red-600 mt-2">{errorMessage}</p>
             )}
@@ -338,7 +319,7 @@ export default function CourseRegistrationForm() {
               </button>
             </div>
           </form>
-          <BulkUpload/>
+          <BulkUpload />
         </div>
       </div>
     </div>

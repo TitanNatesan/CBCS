@@ -23,7 +23,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/login/", {
+      const response = await axios.post("http://192.168.87.151:8000/login/", {
         username,
         password,
       });

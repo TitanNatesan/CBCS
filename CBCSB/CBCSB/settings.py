@@ -95,7 +95,7 @@ DATABASES = {
         'NAME': 'CBCS',
         'USER': 'Titan',
         'PASSWORD': 'titan004',
-        'HOST': 'localhost',
+        'HOST': '192.168.87.151',
         'PORT': '5432',
     }
 }

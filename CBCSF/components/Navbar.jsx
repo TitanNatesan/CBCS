@@ -71,6 +71,12 @@ const Navbar = () => {
             )}
           </div>
         </div>
+        <div className="text-center mt-2">
+          <p className="text-gray-700 font-medium">
+            Faculty of Engineering Department of Computer Science and
+            Engineering
+          </p>
+        </div>
       </div>
       {/* Mobile menu, show/hide based on menu state */}
       <div className="md:hidden">
