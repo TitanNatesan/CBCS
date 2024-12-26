@@ -13,6 +13,8 @@ export default function StudentDashboard() {
   const [totalCredits, setTotalCredits] = useState(0);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
   const [report, setReport] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+
   const [responseData, setResponseData] = useState({
     department: "",
   });
@@ -36,6 +38,19 @@ export default function StudentDashboard() {
       console.error(error);
     }
   };
+  const groupedCourses = courses.reduce((acc, course) => {
+    const semester = course.semester;
+    if (!acc[semester]) {
+      acc[semester] = [];
+    }
+    acc[semester].push(course);
+    return acc;
+  }, {});
+
+  // Filtered courses based on selected semester
+  const filteredCourses = selectedSemester
+    ? { [selectedSemester]: groupedCourses[selectedSemester] }
+    : groupedCourses;
 
   const addSelectedCourse = (course) => {
     if (totalCredits + course.courseCredit > 30) {
@@ -135,10 +150,11 @@ export default function StudentDashboard() {
       </aside>
 
       <main className="flex-1 p-8 overflow-auto">
-        <h1 className="text-xl font-semibold text-gray-700 mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">
           Department of{" "}
-          <b className="text-blue-700">{responseData.department}</b>
+          <span className="text-blue-600">{responseData.department}</span>
         </h1>
+
         <h1 className="text-3xl font-bold text-gray-800 mb-6">
           Course Registration
         </h1>
@@ -151,7 +167,7 @@ export default function StudentDashboard() {
         {view === "courses" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-4">
+              {/* <div className="flex items-center space-x-4">
                 <label htmlFor="semester" className="font-medium text-gray-700">
                   Semester:
                 </label>
@@ -169,56 +185,90 @@ export default function StudentDashboard() {
                     )
                   )}
                 </select>
-              </div>
+              </div> */}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-xl font-semibold mb-4 text-gray-800">
-                  Available Courses
-                </h4>
-                <div className="bg-white shadow rounded-lg overflow-hidden">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Code
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Credits
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Action
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {courses.map((course) => (
-                        <tr key={course.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.name}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.code}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                            {course.courseCredit}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <button
-                              onClick={() => addSelectedCourse(course)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              <ChevronRight className="h-5 w-5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {/* Filter Buttons */}
+                <div className="flex space-x-4 mb-6">
+                  {Object.keys(groupedCourses).map((semester) => (
+                    <button
+                      key={semester}
+                      onClick={() =>
+                        setSelectedSemester(
+                          selectedSemester === semester ? null : semester
+                        )
+                      }
+                      className={`px-4 py-2 rounded ${
+                        selectedSemester === semester
+                          ? "bg-indigo-600 text-white"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      Semester {semester}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setSelectedSemester(null)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded"
+                  >
+                    Show All
+                  </button>
+                </div>
+
+                {/* Courses Table */}
+                <div className="space-y-6">
+                  {Object.keys(filteredCourses).map((semester) => (
+                    <div key={semester}>
+                      <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                        Semester {semester}
+                      </h3>
+                      <div className="bg-white shadow rounded-lg overflow-hidden mb-6">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Name
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Code
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Credits
+                              </th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredCourses[semester].map((course) => (
+                              <tr key={course.id}>
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                  {course.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                  {course.code}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                  {course.courseCredit}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <button
+                                    onClick={() => addSelectedCourse(course)}
+                                    className="text-indigo-600 hover:text-indigo-900"
+                                  >
+                                    <ChevronRight className="h-5 w-5" />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -289,10 +339,7 @@ export default function StudentDashboard() {
             <h3 className="text-2xl font-bold text-gray-800 mb-6">
               Enrolled Courses
             </h3>
-            <p className="text-black">
-              The report from the API contains the full semester report,
-              displayed as a historical overview of all enrolled courses.
-            </p>
+
             {report.map((semesterReport) => {
               // Map the enrolled course IDs to course details
               const enrolledCoursesForSemester = semesterReport.enrolled_courses
