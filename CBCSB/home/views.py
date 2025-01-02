@@ -22,7 +22,7 @@ def test(request):
         name = str(urls.urlpatterns[i].name).ljust(20).rjust(21," ")
         cont[name] = "http://"+ip + ":8000/"+urls.urlpatterns[i].pattern._route
     
-    cont['Admin Login'.ljust(20).rjust(21," ")] = "http://localhost:8000/admin/"
+    cont['Admin Login'.ljust(20).rjust(21," ")] = "http://192.168.87.151:8000/admin/"
     
     return Response({"cont":cont})
 

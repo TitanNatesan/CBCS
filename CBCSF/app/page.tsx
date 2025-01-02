@@ -23,7 +23,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/login/", {
+      const response = await axios.post("http://192.168.87.151:8000/login/", {
         username,
         password,
       });
@@ -49,13 +49,11 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
       <div className="w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-white mb-8 animate-fade-in">
-          Faculty of Engineering
-        </h1>
+       
         <div className="bg-white rounded-lg shadow-xl overflow-hidden">
           <div className="p-8">
-            <h2 className="text-2xl font-bold text-center text-gray-700 mb-6 animate-slide-down">
-              Course Registration Login
+            <h2 className="text-3xl font-bold text-center text-gray-700 mb-6 animate-slide-down">
+              Course Registration
             </h2>
             {error && (
               <p className="text-red-500 text-sm text-center mb-4 animate-shake">

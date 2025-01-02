@@ -34,7 +34,7 @@ export default function StudentsList() {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/students/", {
+      const response = await axios.get("http://192.168.87.151:8000/students/", {
         headers: { Authorization: `token ${token}` },
       });
       setStudents(response.data);
@@ -46,7 +46,7 @@ export default function StudentsList() {
   const fetchIndividualStudent = async (sid: number) => {
     try {
       const response = await axios.get(
-        `http://127.0.0.1:8000/getdetails/${sid}/`,
+        `http://192.168.87.151:8000/getdetails/${sid}/`,
         {
           headers: { Authorization: `token ${token}` },
         }
@@ -157,12 +157,7 @@ export default function StudentsList() {
     <div className="max-w-6xl text-black mx-auto p-4 sm:p-6 lg:p-8">
       {/* Header with KAHE branding */}
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-green-700">
-          Faculty of Engineering
-        </h1>
-        <h2 className="text-xl font-semibold text-gray-700 mt-2">
-          Department of Computer Science and Engineering
-        </h2>
+       
       </div>
 
       <AnimatePresence mode="wait">

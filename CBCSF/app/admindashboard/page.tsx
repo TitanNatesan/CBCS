@@ -10,27 +10,30 @@ import axios from "axios";
 
 const Page = () => {
   const [view, setView] = useState("upload");
-  const [responseData, setResponseData] = useState({programs: [], batchs: [], courses: []});
+  const [responseData, setResponseData] = useState({
+    programs: [],
+    batchs: [],
+    courses: [],
+  });
 
   const fetch = () => {
-    axios.get("http://localhost:8000/hodDash/",
-      {
-        headers:
-        {
+    axios
+      .get("http://192.168.87.151:8000/hodDash/", {
+        headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
-        }
-      }
-    ).then((response) => {
-      setResponseData(response.data);
-    }
-    ).catch((error) => {
-      console.log(error);
-    });
-  }
+        },
+      })
+      .then((response) => {
+        setResponseData(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   useEffect(() => {
     fetch();
-  }, [])
+  }, []);
 
   return (
     <div className="flex bg-white h-screen">
@@ -38,9 +41,11 @@ const Page = () => {
       <div className="flex-1 p-6">
         {view === "upload" && <UploadForm />}
         {view === "students" && <StudentsList />}
-        {view === "courses" && <CoursesList course={responseData.courses}/>}
+        {view === "courses" && <CoursesList course={responseData.courses} />}
         {view === "studentsupload" && <StudentBulkRegister />}
-        {view === "PaBv" && <PaBv program={responseData.programs} batch={responseData.batchs} />}
+        {view === "PaBv" && (
+          <PaBv program={responseData.programs} batch={responseData.batchs} />
+        )}
       </div>
     </div>
   );
