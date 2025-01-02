@@ -423,7 +423,6 @@ def studDashBoard(request):
         cont['enrolled_courses'] = serializers.CourseItemSerial(cur_report.enrolled_courses,many=True).data
         enrolled_course_ids = cur_report.enrolled_courses.values_list('course_id', flat=True)
         avail_courses = models.Course.objects.filter(
-            semester=request.user.student.sem,
             department=request.user.student.department,
             program=request.user.student.program
         ).exclude(id__in=enrolled_course_ids)
