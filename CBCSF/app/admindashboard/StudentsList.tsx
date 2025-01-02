@@ -34,7 +34,7 @@ export default function StudentsList() {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get("http://192.168.87.151:8000/students/", {
+      const response = await axios.get("http://localhost:8000/students/", {
         headers: { Authorization: `token ${token}` },
       });
       setStudents(response.data);
@@ -46,7 +46,7 @@ export default function StudentsList() {
   const fetchIndividualStudent = async (sid: number) => {
     try {
       const response = await axios.get(
-        `http://192.168.87.151:8000/getdetails/${sid}/`,
+        `http://localhost:8000/getdetails/${sid}/`,
         {
           headers: { Authorization: `token ${token}` },
         }

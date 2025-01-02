@@ -23,7 +23,7 @@ export default function StudentDashboard() {
 
   const fetchDetails = async () => {
     try {
-      const response = await axios.get("http://192.168.87.151:8000/studDash/", {
+      const response = await axios.get("http://localhost:8000/studDash/", {
         headers: { Authorization: `Token ${token}` },
       });
       console.log(response.data);
@@ -76,7 +76,7 @@ export default function StudentDashboard() {
     const course_ids = selectedCourses.map((course) => course.id);
     axios
       .post(
-        "http://192.168.87.151:8000/studDash/",
+        "http://localhost:8000/studDash/",
         { CourseIDs: course_ids, type: "enroll" },
         { headers: { Authorization: `Token ${token}` } }
       )

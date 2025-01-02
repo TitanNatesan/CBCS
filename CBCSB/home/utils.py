@@ -28,7 +28,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 2,
@@ -42,7 +42,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 3,
@@ -56,7 +56,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 4,
@@ -70,7 +70,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 5,
@@ -84,7 +84,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 6,
@@ -98,7 +98,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 7,
@@ -112,7 +112,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 8,
@@ -126,7 +126,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 9,
@@ -140,7 +140,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 10,
@@ -154,7 +154,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 11,
@@ -168,7 +168,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 12,
@@ -182,7 +182,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 13,
@@ -196,7 +196,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 14,
@@ -210,7 +210,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 15,
@@ -224,7 +224,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 16,
@@ -238,7 +238,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 17,
@@ -252,7 +252,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 18,
@@ -266,7 +266,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 19,
@@ -280,7 +280,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 20,
@@ -294,7 +294,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 21,
@@ -308,7 +308,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 22,
@@ -322,7 +322,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 23,
@@ -336,7 +336,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 24,
@@ -350,7 +350,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 25,
@@ -364,7 +364,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 26,
@@ -378,7 +378,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 27,
@@ -392,7 +392,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 28,
@@ -406,7 +406,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 29,
@@ -420,7 +420,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 30,
@@ -434,7 +434,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 31,
@@ -448,7 +448,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 32,
@@ -462,7 +462,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 33,
@@ -476,7 +476,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 34,
@@ -490,7 +490,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 35,
@@ -504,7 +504,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 36,
@@ -518,7 +518,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 37,
@@ -532,7 +532,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 38,
@@ -546,7 +546,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 39,
@@ -560,7 +560,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 40,
@@ -574,7 +574,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 41,
@@ -588,7 +588,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 42,
@@ -602,7 +602,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 43,
@@ -616,7 +616,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 44,
@@ -630,7 +630,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 45,
@@ -644,7 +644,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 46,
@@ -658,7 +658,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 47,
@@ -672,7 +672,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 48,
@@ -686,7 +686,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 49,
@@ -700,7 +700,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 50,
@@ -714,7 +714,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 51,
@@ -728,7 +728,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 52,
@@ -742,7 +742,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 53,
@@ -756,7 +756,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 54,
@@ -770,7 +770,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 55,
@@ -784,7 +784,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 56,
@@ -798,7 +798,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 57,
@@ -812,7 +812,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 58,
@@ -826,7 +826,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 59,
@@ -840,7 +840,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 60,
@@ -854,7 +854,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 61,
@@ -868,7 +868,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 62,
@@ -882,7 +882,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 63,
@@ -896,7 +896,7 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
     {
         "S.NO": 64,
@@ -910,6 +910,6 @@ students = [
         "department":1,
         "program":1,
         "sem": 3,
-        "batch": 2,
+        "batch": 1,
     },
 ]

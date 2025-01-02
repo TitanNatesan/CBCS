@@ -55,7 +55,7 @@ export default function BulkUpload() {
         // Send the formatted data to your API
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          "http://192.168.87.151:8000/courses/hodDash/",
+          "http://localhost:8000/courses/hodDash/",
           { courses: formattedData },
           {
             headers: {

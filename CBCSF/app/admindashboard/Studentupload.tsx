@@ -54,7 +54,7 @@ export default function StudentBulkRegister() {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://192.168.87.151:8000/studentblukregister/", // Your API endpoint
+          "http://localhost:8000/studentblukregister/", // Your API endpoint
           { data: jsonData }, // Sending JSON data to the backend
           {
             headers: {

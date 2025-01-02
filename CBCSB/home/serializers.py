@@ -64,8 +64,8 @@ class StudentSerializer(serializers.ModelSerializer):
     # department = DepartmentSerializer()
     class Meta:
         model = Student
-        fields = ['id', 'username', 'password', 'email', 'department',"program","batch","sem","first_name","last_name"]
-        extra_kwargs = {'password': {'write_only': True},"current_semester":{'read_only':True}, "first_name":{"required":False},"last_name":{"required":False}}
+        fields = ['id', 'username', 'password', 'email', 'department',"program","batch","sem","first_name","last_name","joined_date"]
+        extra_kwargs = {'password': {'write_only': True},"current_semester":{'read_only':True}, "first_name":{"required":False},"last_name":{"required":False},"joined_date":{"required":False}}
 
     def create(self, validated_data):
         student = Student.objects.create_user(**validated_data)
@@ -99,7 +99,7 @@ class StudentUploadSerializer(serializers.ModelSerializer):
     file = serializers.FileField(required=True)
     class Meta:
         model = Student
-        fields = ["program","batch","sem","file"]
+        fields = ["program","sem","file"]
         
     def validate_file(self, value):
         # Add validation for file type if necessary

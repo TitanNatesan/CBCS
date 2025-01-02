@@ -18,7 +18,7 @@ const Page = () => {
 
   const fetch = () => {
     axios
-      .get("http://192.168.87.151:8000/hodDash/", {
+      .get("http://localhost:8000/hodDash/", {
         headers: {
           Authorization: `Token ${localStorage.getItem("token")}`,
         },
@@ -43,9 +43,7 @@ const Page = () => {
         {view === "students" && <StudentsList />}
         {view === "courses" && <CoursesList course={responseData.courses} />}
         {view === "studentsupload" && <StudentBulkRegister />}
-        {view === "PaBv" && (
-          <PaBv program={responseData.programs} batch={responseData.batchs} />
-        )}
+        {view === "PaBv" && <PaBv program={responseData.programs} batch={responseData.batchs} />}
       </div>
     </div>
   );

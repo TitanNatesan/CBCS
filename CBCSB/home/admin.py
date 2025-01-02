@@ -22,7 +22,7 @@ class ProgramAdmin(admin.ModelAdmin):
     
 @admin.register(models.Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ['username','department',"batch","sem",'joined_date',]
+    list_display = ['username',"first_name","last_name",'department',"batch","sem",'joined_date',]
     list_filter = ['department','sem',"batch"]
     
     search_fields = ["username", "email", "department__name"]
@@ -36,6 +36,7 @@ class StudentAdmin(admin.ModelAdmin):
         'Set_Semester_6',
         'Set_Semester_7',
         'Set_Semester_8',
+        # 'changeBatch',
     ]
     
     def Set_Semester_1(slef,request,queryset):
@@ -54,6 +55,8 @@ class StudentAdmin(admin.ModelAdmin):
         queryset.update(sem=7)
     def Set_Semester_8(self,request,queryset):
         queryset.update(sem=8)
+    def changeBatch(self,request,queryset):
+        queryset.update(batch=5)
     
 @admin.register(models.HOD)
 class HODAdmin(admin.ModelAdmin):
@@ -64,11 +67,12 @@ class HODAdmin(admin.ModelAdmin):
 class CourseAdmin(admin.ModelAdmin):
     list_filter = ['semester','department','is_optional']
     search_fields = ['name','code']
-    list_display = ["name", "code", "program","department",'semester',"id"]
+    list_display = ["name", "code", "program","department",'semester',"id","batchview"]
     
     actions =['Set_Optional',"Set_Compulsory",]
 
-    
+    def batchview(self,obj):
+        return ",".join([str(i) for i in obj.batch.all()])
     
     def Set_Optional(self,request,queryset):
         queryset.update(is_optional=True)

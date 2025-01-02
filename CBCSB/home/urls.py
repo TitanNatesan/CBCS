@@ -14,7 +14,9 @@ urlpatterns = [
     path("getCourses/",views.getCourses,name="GetCourses"),
     path("programs/",views.programs,name="Programs"),
     path("adminDash/",views.adminDashBoard),
+
     path("studentblukregister/",views.StudentRegisterBulk.as_view(),name="student-register-bluk",),
+    path("courseblukregister/",views.CourseUploadBluk.as_view(),name="course-register-bluk",),
     path("studDash/",views.studDashBoard,name="Student Dashboard"),
     path("hodDash/",views.HodDashBoard,name="HOD Dashboard"),
     # path("fake/",views.fake,name="fake"),

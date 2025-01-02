@@ -44,7 +44,7 @@ export default function CourseRegistrationForm() {
   const fetchPrograms = async (): Promise<void> => {
     try {
       const response = await axios.get(
-        "http://192.168.87.151:8000/adminDash/",
+        "http://localhost:8000/adminDash/",
         {
           headers: { Authorization: `Token ${token}` },
         }
@@ -108,13 +108,14 @@ export default function CourseRegistrationForm() {
 
     try {
       const response = await axios.post(
-        "http://192.168.87.151:8000/courses/",
+        "http://localhost:8000/hodDash/",
         {
-          course_id: 1,
+          type: "CourseUpload",
+          program: formData.program,
           semester: formData.semester,
+          batch: formData.batch,
           name: formData.subjectName,
           code: formData.subjectCode,
-          program: formData.program,
           courseCredit: formData.courseCredit,
           is_optional: formData.isOptional,
         },

@@ -22,7 +22,7 @@ def test(request):
         name = str(urls.urlpatterns[i].name).ljust(20).rjust(21," ")
         cont[name] = "http://"+ip + ":8000/"+urls.urlpatterns[i].pattern._route
     
-    cont['Admin Login'.ljust(20).rjust(21," ")] = "http://192.168.87.151:8000/admin/"
+    cont['Admin Login'.ljust(20).rjust(21," ")] = "http://localhost:8000/admin/"
     
     return Response({"cont":cont})
 
@@ -302,7 +302,6 @@ class StudentRegisterBulk(generics.CreateAPIView):
             # Read the Excel file into a DataFrame
             df = pd.read_excel(uploaded_file)
             program = models.Program.objects.get(pk=request.data['program'])
-            batch = models.Batch.objects.get(pk=request.data['batch'])
             semester = request.data['sem']
             department = models.Department.objects.get(pk=request.user.hod.department.id)
             
@@ -310,17 +309,22 @@ class StudentRegisterBulk(generics.CreateAPIView):
             message = {"success": [], "error": []}
             for index, row in df.iterrows():
                 itm = row.to_dict()
+                batch_obj = models.Batch.objects.get(
+                    start_year__year=int(itm["Batch Start Year"]),
+                    end_year__year=int(itm["Batch End Year"])
+                )
                 data = {
                     "username": itm['Username'],
-                    "email": itm["Email"],
+                    "email": itm["email"],
                     "department": department.id,
                     "program": program.id,
-                    "batch": batch.id,
+                    "batch": batch_obj.id,
                     "sem": semester,
-                    "first_name": itm["First Name"],
-                    "last_name": itm["Last Name"],
+                    "first_name": itm["first_name"],
+                    "last_name": itm["last_name"],
                     "enrolled_courses": [],
-                    "password": itm["Password"]
+                    "password": itm["Username"],
+                    "joined_date": itm["DOJ"]
                 }
                 try:
                     studSerial = serializers.StudentSerializer(data=data)
@@ -335,6 +339,7 @@ class StudentRegisterBulk(generics.CreateAPIView):
 
             return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
         except Exception as e:
+            ic(e)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class CourseUploadBluk(generics.CreateAPIView):
@@ -381,8 +386,7 @@ class CourseUploadBluk(generics.CreateAPIView):
                     message['error'].append({"id": itm["Course Code"], "error": str(e)})
 
             return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e: return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
     
 @api_view(["GET"])
@@ -453,10 +457,8 @@ def studDashBoard(request):
                     report.enrolled_courses.add(course_status)
                     report.save()
                     cont['message'].append(f"{course.name} enrolled successfully.")
-            except models.Course.DoesNotExist:
-                cont['errors'].append(f"Course with ID {course_id} does not exist.")
-            except Exception as e:
-                cont['errors'].append(str(e))
+            except models.Course.DoesNotExist: cont['errors'].append(f"Course with ID {course_id} does not exist.")
+            except Exception as e: cont['errors'].append(str(e))
         return Response(cont, status=status.HTTP_200_OK if not cont['errors'] and cont['message'] else status.HTTP_206_PARTIAL_CONTENT if cont['errors'] and cont['message'] else status.HTTP_400_BAD_REQUEST)
     
     if request.method == "POST" and request.data.get('type') == "unenroll" and request.data.get("type") != "enroll":
@@ -467,8 +469,7 @@ def studDashBoard(request):
         cont['message'] = []
         report, created = models.SemReport.objects.get_or_create(student=request.user.student, semester=request.user.student.sem)
         
-        if report.is_approved:
-            return Response({"error": "Cannot modify an approved report."}, status=status.HTTP_403_FORBIDDEN)
+        if report.is_approved: return Response({"error": "Cannot modify an approved report."}, status=status.HTTP_403_FORBIDDEN)
         
         for course_id in courselist:
             try:
@@ -481,8 +482,7 @@ def studDashBoard(request):
             except models.Course.DoesNotExist: cont['errors'].append(f"Course with ID {course_id} does not exist.")
             except Exception as e: cont['errors'].append(str(e))
         return Response(cont, status=status.HTTP_200_OK if not cont['errors'] and cont['message'] else status.HTTP_206_PARTIAL_CONTENT if cont['errors'] and cont['message'] else status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response("Invalid Request [post data must have type]", status=status.HTTP_406_NOT_ACCEPTABLE)
+    else: return Response("Invalid Request [post data must have type]", status=status.HTTP_406_NOT_ACCEPTABLE)
     
 
 @api_view(["GET","POST","PUT"])
@@ -535,5 +535,16 @@ def HodDashBoard(req):
             return Response({"message": "File processed successfully.", "details": message}, status=status.HTTP_201_CREATED)
         except Exception as e: return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
+    if req.method == "POST" and req.data.get("type") == "CourseUpload":
+        ic(req.data)
+        cont = {}
+        course = serializers.BulkUploadCourses(data=req.data)
+        if course.is_valid():
+            course.save(department=req.user.hod.department)
+            cont['message'] = "Course Created Successfully"
+            return Response(cont , status=status.HTTP_201_CREATED)
+        else:
+            cont['error'] = course.errors
+            return Response(cont, status=status.HTTP_400_BAD_REQUEST)
     
     else: return Response("Invalid Request", status=status.HTTP_400_BAD_REQUEST)
