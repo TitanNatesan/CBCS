@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { toast } from "react-hot-toast";
@@ -8,6 +8,8 @@ import { toast } from "react-hot-toast";
 export default function BulkUpload() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMessage("");
@@ -33,26 +35,23 @@ export default function BulkUpload() {
         const binaryStr = event.target?.result;
         if (!binaryStr) return;
 
-        // Parse the Excel file
         const workbook = XLSX.read(binaryStr, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-        // Format the data for the API
         const formattedData = jsonData.map((row: any) => ({
-          program: row["Program"], // Assuming Excel column name is "Program"
-          semester: row["Semester"], // Assuming Excel column name is "Semester"
-          batch: row["Batch"], // Assuming Excel column name is "Batch"
-          name: row["Subject Name"], // Assuming Excel column name is "Subject Name"
-          code: row["Subject Code"], // Assuming Excel column name is "Subject Code"
-          courseCredit: row["Course Credit"], // Assuming Excel column name is "Course Credit"
-          is_optional: row["Is Optional"] === "Yes", // Assuming Excel column name is "Is Optional"
+          program: row["Program"],
+          semester: row["Semester"],
+          batch: row["Batch"],
+          name: row["Subject Name"],
+          code: row["Subject Code"],
+          courseCredit: row["Course Credit"],
+          is_optional: row["Is Optional"] === "Yes",
         }));
 
         setLoading(true);
 
-        // Send the formatted data to your API
         const token = localStorage.getItem("token");
         const response = await axios.post(
           "http://localhost:8000/courses/hodDash/",
@@ -68,6 +67,11 @@ export default function BulkUpload() {
           toast.success("Courses uploaded successfully!", {
             position: "top-right",
           });
+          // Clear the selected file after successful upload
+          setSelectedFile(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
         } else {
           toast.error("Failed to upload courses.");
         }
@@ -80,6 +84,32 @@ export default function BulkUpload() {
     };
 
     reader.readAsBinaryString(file);
+    setSelectedFile(file);
+  };
+
+  const handleDownloadTemplate = () => {
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet([
+      {
+        Program: "",
+        Semester: "",
+        Batch: "",
+        "Subject Name": "",
+        "Subject Code": "",
+        "Course Credit": "",
+        "Is Optional": "",
+      },
+    ]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+    XLSX.writeFile(workbook, "coursedata.xlsx");
+  };
+
+  const handleClearFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    setErrorMessage("");
   };
 
   return (
@@ -87,12 +117,24 @@ export default function BulkUpload() {
       <h3 className="text-lg font-semibold text-gray-800 mb-4">
         Bulk Upload Courses
       </h3>
-      <input
-        type="file"
-        accept=".xlsx"
-        onChange={handleFileUpload}
-        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-      />
+      <div className="flex items-center">
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={handleFileUpload}
+          ref={fileInputRef}
+          className="flex-grow text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
+        {selectedFile && (
+          <button
+            onClick={handleClearFile}
+            className="ml-2 bg-gray-300 text-gray-700 px-3 py-1 rounded hover:bg-gray-400 text-sm"
+            title="Clear selected file"
+          >
+            Clear
+          </button>
+        )}
+      </div>
       {errorMessage && <p className="text-red-500 mt-2">{errorMessage}</p>}
       {loading && (
         <div className="mt-4 text-center">
@@ -118,6 +160,12 @@ export default function BulkUpload() {
           </svg>
         </div>
       )}
+      <button
+        onClick={handleDownloadTemplate}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Download Excel Template
+      </button>
     </div>
   );
 }
