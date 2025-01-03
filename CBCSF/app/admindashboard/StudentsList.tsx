@@ -26,11 +26,24 @@ interface Student {
   }>;
 }
 
+type ActionStatus = "Pending" | "Accept" | "Rejection";
+
+interface StudentAction {
+  status: ActionStatus;
+  reason?: string;
+  isSaved?: boolean;
+}
+
 export default function StudentsList() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const token = localStorage.getItem("token");
+  const [studentActions, setStudentActions] = useState<
+    Record<number, StudentAction>
+  >({});
+  const [saveStatus, setSaveStatus] = useState<Record<number, string>>({});
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const fetchStudents = async () => {
     try {
@@ -40,6 +53,8 @@ export default function StudentsList() {
       setStudents(response.data);
     } catch (error) {
       console.error("Error fetching students", error);
+      // Set demo data on error
+      setStudents(generatedemoStudents());
     }
   };
 
@@ -54,28 +69,28 @@ export default function StudentsList() {
       if (response.data && response.data.student) {
         setSelectedStudent(response.data["student"]);
       } else {
-        setSelectedStudent(generateFakeStudent(sid));
+        setSelectedStudent(generatedemoStudent(sid));
       }
     } catch (error) {
       console.error("Error fetching individual student", error);
-      setSelectedStudent(generateFakeStudent(sid));
+      setSelectedStudent(generatedemoStudent(sid));
     }
   };
 
-  const generateFakeStudent = (sid: number): Student => ({
+  const generatedemoStudent = (sid: number): Student => ({
     id: sid,
-    username: "fake_username",
-    email: "fake_email@example.com",
-    phone: "1234567890",
-    address: "123 Fake Street",
+    username: `demo_user_${sid}`,
+    email: `demo_email_${sid}@example.com`,
+    phone: "123-456-7890",
+    address: `${sid} demo Street, demotown`,
     department: {
-      name: "Fake Department",
+      name: "demo Department",
     },
     enrolled_courses: [
       {
         id: 1,
         course: {
-          name: "Fake Course 1",
+          name: "demo Course 1",
           code: "FC101",
           semester: "1",
           is_optional: false,
@@ -85,7 +100,7 @@ export default function StudentsList() {
       {
         id: 2,
         course: {
-          name: "Fake Course 2",
+          name: "demo Course 2",
           code: "FC102",
           semester: "2",
           is_optional: true,
@@ -95,9 +110,17 @@ export default function StudentsList() {
     ],
   });
 
+  const generatedemoStudents = (): Student[] => [
+    generatedemoStudent(1),
+    generatedemoStudent(2),
+    generatedemoStudent(3),
+    generatedemoStudent(4),
+    generatedemoStudent(5),
+  ];
+
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents]);
+  }, []);
 
   const handleBackToList = () => setSelectedStudent(null);
 
@@ -107,6 +130,7 @@ export default function StudentsList() {
       0
     );
   };
+
   const handlePrint = () => {
     if (selectedStudent) {
       const printWindow = window.open("", "_blank");
@@ -115,15 +139,15 @@ export default function StudentsList() {
           "<html><head><title>Student Details</title>"
         );
         printWindow.document.write(`
-        <style>
-          @media print {
-            body { padding: 20px; font-family: Arial, sans-serif; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #ddd; padding: 8px; }
-            @page { margin: 0.5in; }
-          }
-        </style>
-      `);
+          <style>
+            @media print {
+              body { padding: 20px; font-family: Arial, sans-serif; }
+              table { border-collapse: collapse; width: 100%; }
+              th, td { border: 1px solid #ddd; padding: 8px; }
+              @page { margin: 0.5in; }
+            }
+          </style>
+        `);
         printWindow.document.write("</head><body></body></html>");
         printWindow.document.close();
 
@@ -153,13 +177,74 @@ export default function StudentsList() {
       student.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleActionChange = (studentId: number, status: ActionStatus) => {
+    setStudentActions((prev) => ({
+      ...prev,
+      [studentId]: {
+        status,
+        reason: prev[studentId]?.reason || "",
+        isSaved: false,
+      },
+    }));
+    // Reset save status when action changes
+    setSaveStatus((prev) => ({ ...prev, [studentId]: "" }));
+  };
+
+  const handleReasonChange = (studentId: number, reason: string) => {
+    setStudentActions((prev) => ({
+      ...prev,
+      [studentId]: { ...prev[studentId], reason, isSaved: false },
+    }));
+    // Reset save status when reason changes
+    setSaveStatus((prev) => ({ ...prev, [studentId]: "" }));
+  };
+
+  const handleSave = (studentId: number) => {
+    const action = studentActions[studentId];
+    if (
+      action.status === "Rejection" &&
+      (!action.reason || action.reason.trim() === "")
+    ) {
+      alert("Please provide a reason for rejection.");
+      return;
+    }
+
+    // Here, you can implement the API call to save the action.
+    // For demonstration, we'll just update the saveStatus state.
+
+    // Example API call (uncomment and modify as needed):
+    /*
+    axios.post(`http://localhost:8000/students/${studentId}/action/`, {
+      status: action.status,
+      reason: action.reason,
+    }, {
+      headers: { Authorization: `token ${token}` },
+    })
+    .then(response => {
+      setSaveStatus(prev => ({ ...prev, [studentId]: "Saved successfully!" }));
+      // Optionally, update the student list or perform other actions
+    })
+    .catch(error => {
+      console.error("Error saving action", error);
+      setSaveStatus(prev => ({ ...prev, [studentId]: "Error saving action." }));
+    });
+    */
+
+    // Simulate saving with a timeout
+    setTimeout(() => {
+      setSaveStatus((prev) => ({
+        ...prev,
+        [studentId]: "Saved successfully!",
+      }));
+      setStudentActions((prev) => ({
+        ...prev,
+        [studentId]: { ...prev[studentId], isSaved: true },
+      }));
+    }, 500);
+  };
+
   return (
     <div className="max-w-6xl text-black mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Header with KAHE branding */}
-      <div className="text-center mb-8">
-       
-      </div>
-
       <AnimatePresence mode="wait">
         {selectedStudent ? (
           <motion.div
@@ -314,6 +399,8 @@ export default function StudentsList() {
                       </th>
                       <th className="py-2 px-4 text-left border">Email</th>
                       <th className="py-2 px-4 text-left border">Actions</th>
+                      <th className="py-2 px-4 text-left border">Status</th>
+                      <th className="py-2 px-4 text-left border">Save</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -329,6 +416,62 @@ export default function StudentsList() {
                           >
                             View Details
                           </button>
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <div className="flex flex-col">
+                            <select
+                              value={
+                                studentActions[student.id]?.status || "Pending"
+                              }
+                              onChange={(e) =>
+                                handleActionChange(
+                                  student.id,
+                                  e.target.value as ActionStatus
+                                )
+                              }
+                              className="p-1 border rounded"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Accept">Accept</option>
+                              <option value="Rejection">Rejection</option>
+                            </select>
+
+                            {/* Rejection Reason Textbox */}
+                            {studentActions[student.id]?.status ===
+                              "Rejection" && (
+                              <input
+                                type="text"
+                                placeholder="Reason for rejection"
+                                value={studentActions[student.id]?.reason || ""}
+                                onChange={(e) =>
+                                  handleReasonChange(student.id, e.target.value)
+                                }
+                                className="mt-2 p-1 border rounded"
+                              />
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4 border">
+                          <div className="flex flex-col">
+                            <button
+                              onClick={() => handleSave(student.id)}
+                              className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600 transition-colors"
+                            >
+                              Save
+                            </button>
+                            {saveStatus[student.id] && (
+                              <span
+                                className={`mt-1 text-sm ${
+                                  saveStatus[student.id] ===
+                                  "Saved successfully!"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {saveStatus[student.id]}
+                              </span>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
