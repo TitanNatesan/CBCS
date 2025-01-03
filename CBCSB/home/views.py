@@ -559,20 +559,21 @@ def HodDashBoard(req):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     if req.method == "PUT" and req.data.get("type") == "ReportUpdate":
-        student_id = req.data.get("student")
-        sem = req.data.get("sem")
-        status = req.data.get("status")
-
-        report = models.SemReport.objects.get(student_id=student_id, semester=sem)
-        if report.is_approved: return Response({"error": "Cannot modify an approved report."}, status=status.HTTP_403_FORBIDDEN)
-        if not report.is_approved and status == "approve":
+        report = models.SemReport.objects.get(pk=req.data.get("report"))
+        approval = req.data.get("aproved")
+        if approval and report.is_approved:
+            return Response({"message":"already approved"},status=status.HTTP_304_NOT_MODIFIED)
+        if not approval and report.is_approved:
+            return Response({"message":"can't update"},status=status.HTTP_406_NOT_ACCEPTABLE)
+        if not approval and not report.is_approved:
+            reason = req.data.get("ror")
+            report.reason_for_rejection = reason
+            report.save()
+            return Response({"message":"reason added"},status=status.HTTP_202_ACCEPTED)
+        if approval and not report.is_approved:
             report.is_approved = True
             report.save()
-            return Response({"message": "Report approved successfully."}, status=status.HTTP_200_OK)
-        elif not report.is_approved and status == "reject":
-            report.is_approved = False
-            report.reason_for_rejection = req.data.get("ROR")
-            report.save()
-            return Response({"message":"report rejected"})
+            return Response({"message":"report approved"},status=status.HTTP_200_OK)
+        
 
     else: return Response("Invalid Request", status=status.HTTP_400_BAD_REQUEST)
