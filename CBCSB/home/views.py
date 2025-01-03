@@ -547,4 +547,32 @@ def HodDashBoard(req):
             cont['error'] = course.errors
             return Response(cont, status=status.HTTP_400_BAD_REQUEST)
     
+    if req.method == "POST" and req.data.get("type") == "getsemReports":
+        try:
+            hod = req.user.hod
+            sem_reports = models.SemReport.objects.filter(student__department=hod.department)
+            student_ids = sem_reports.values_list('student_id', flat=True).distinct()
+            students = models.Student.objects.filter(pk__in=student_ids)
+            serialized = serializers.StudentSerializer(students, many=True)
+            return Response(serialized.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    if req.method == "PUT" and req.data.get("type") == "ReportUpdate":
+        student_id = req.data.get("student")
+        sem = req.data.get("sem")
+        status = req.data.get("status")
+
+        report = models.SemReport.objects.get(student_id=student_id, semester=sem)
+        if report.is_approved: return Response({"error": "Cannot modify an approved report."}, status=status.HTTP_403_FORBIDDEN)
+        if not report.is_approved and status == "approve":
+            report.is_approved = True
+            report.save()
+            return Response({"message": "Report approved successfully."}, status=status.HTTP_200_OK)
+        elif not report.is_approved and status == "reject":
+            report.is_approved = False
+            report.reason_for_rejection = req.data.get("ROR")
+            report.save()
+            return Response({"message":"report rejected"})
+
     else: return Response("Invalid Request", status=status.HTTP_400_BAD_REQUEST)

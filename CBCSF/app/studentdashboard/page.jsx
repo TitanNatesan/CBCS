@@ -69,6 +69,7 @@ export default function StudentDashboard() {
     if (course.semester === currentSem.toString()) {
       setCourses((prev) => [...prev, course]);
     }
+    handleDelete(course.id)
   };
 
   const handleSubmit = () => {
@@ -90,15 +91,32 @@ export default function StudentDashboard() {
     fetchDetails();
   };
 
+  const handleDelete = (id) =>{
+    axios.post(
+      "http://localhost:8000/studDash/",
+      {CourseIDs: [id], type: "unenroll"},
+      { headers: { Authorization: `Token ${token}` } }
+    )
+    .then((res) => {
+      console.log(res.data);
+      fetchDetails()
+      // window.location.reload(); // Refresh the window after successful submission
+    })
+    .catch((err) => {
+      console.log(err);
+      fetchDetails();
+    });
+  }
+
   useEffect(() => {
     fetchDetails();
   }, [view]);
 
-  useEffect(() => {
-    console.log({ courses: courses });
-    console.log({ selectedCourses: selectedCourses });
-    console.log({ enrolledCourses: enrolledCourses });
-  });
+  // useEffect(() => {
+  //   console.log({ courses: courses });
+  //   console.log({ selectedCourses: selectedCourses });
+  //   console.log({ enrolledCourses: enrolledCourses });
+  // });
 
   return (
     <div className="flex h-screen bg-gray-100">

@@ -243,6 +243,10 @@ export default function StudentsList() {
     }, 500);
   };
 
+  const updatereport = () =>{
+
+  }
+
   return (
     <div className="max-w-6xl text-black mx-auto p-4 sm:p-6 lg:p-8">
       <AnimatePresence mode="wait">
