@@ -561,13 +561,11 @@ def HodDashBoard(req):
     if req.method == "PUT" and req.data.get("type") == "ReportUpdate":
         report = models.SemReport.objects.get(pk=req.data.get("report"))
         approval = req.data.get("aproved")
-        if approval and report.is_approved:
-            return Response({"message":"already approved"},status=status.HTTP_304_NOT_MODIFIED)
-        if not approval and report.is_approved:
-            return Response({"message":"can't update"},status=status.HTTP_406_NOT_ACCEPTABLE)
+        if approval and report.is_approved: return Response({"message":"already approved"},status=status.HTTP_304_NOT_MODIFIED)
+        if not approval and report.is_approved: return Response({"message":"can't update"},status=status.HTTP_406_NOT_ACCEPTABLE)
         if not approval and not report.is_approved:
-            reason = req.data.get("ror")
-            report.reason_for_rejection = reason
+            # reason = req.data.get("ror")
+            # report.reason_for_rejection = reason
             report.save()
             return Response({"message":"reason added"},status=status.HTTP_202_ACCEPTED)
         if approval and not report.is_approved:
