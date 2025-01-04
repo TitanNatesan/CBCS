@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Book, ChevronRight, Trash2, LogOut } from "lucide-react";
-
+import { toast } from "react-hot-toast";
 export default function StudentDashboard() {
   const [student, setStudent] = useState(null);
   const [view, setView] = useState("courses");
@@ -34,6 +34,7 @@ export default function StudentDashboard() {
       );
       setEnrolledCourses(response.data.enrolled_courses);
       setReport(response.data.report);
+      setCurrentSem(response.data.current_sem);
     } catch (error) {
       console.error(error);
     }
@@ -53,6 +54,7 @@ export default function StudentDashboard() {
     : groupedCourses;
 
   const addSelectedCourse = (course) => {
+
     if (totalCredits + course.courseCredit > 30) {
       alert("Cannot add more courses. Maximum credit limit reached.");
       return;
@@ -61,6 +63,7 @@ export default function StudentDashboard() {
     setSelectedCourses((prev) => [...prev, course]);
     setTotalCredits((prev) => prev + course.courseCredit);
     setCourses((prev) => prev.filter((c) => c.id !== course.id));
+    handleAdd(course.id)
   };
 
   const removeSelectedCourse = (course) => {
@@ -91,21 +94,42 @@ export default function StudentDashboard() {
     fetchDetails();
   };
 
-  const handleDelete = (id) =>{
+  const handleDelete = (id) => {
     axios.post(
       "http://localhost:8000/studDash/",
-      {CourseIDs: [id], type: "unenroll"},
+      { CourseIDs: [id], type: "unenroll" },
       { headers: { Authorization: `Token ${token}` } }
     )
-    .then((res) => {
-      console.log(res.data);
-      fetchDetails()
-      // window.location.reload(); // Refresh the window after successful submission
-    })
-    .catch((err) => {
-      console.log(err);
-      fetchDetails();
-    });
+      .then((res) => {
+        console.log(res.data);
+        fetchDetails()
+        toast.success("Course Removed Successfully");
+        // window.location.reload(); // Refresh the window after successful submission
+      })
+      .catch((err) => {
+        console.log(err);
+        fetchDetails();
+        toast.error("Course Removal Failed");
+      });
+  }
+  const handleAdd = (id) => {
+    axios.post(
+      "http://localhost:8000/studDash/",
+      { CourseIDs: [id], type: "enroll" },
+      { headers: { Authorization: `Token ${token}` } }
+    )
+      .then((res) => {
+        console.log(res.data);
+        fetchDetails()
+        toast.success("Course Added Successfully");
+
+        // window.location.reload(); // Refresh the window after successful submission
+      })
+      .catch((err) => {
+        console.log(err);
+        fetchDetails();
+        toast.error("Course Addition Failed");
+      });
   }
 
   useEffect(() => {
@@ -144,22 +168,20 @@ export default function StudentDashboard() {
         <nav className="p-4">
           <button
             onClick={() => setView("courses")}
-            className={`flex items-center w-full p-2 rounded ${
-              view === "courses"
-                ? "bg-indigo-100 text-indigo-600"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center w-full p-2 rounded ${view === "courses"
+              ? "bg-indigo-100 text-indigo-600"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Book className="mr-2 h-5 w-5" />
             Course Enrollment
           </button>
           <button
             onClick={() => setView("EnrolledCourses")}
-            className={`flex items-center w-full p-2 rounded mt-2 ${
-              view === "EnrolledCourses"
-                ? "bg-indigo-100 text-indigo-600"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`flex items-center w-full p-2 rounded mt-2 ${view === "EnrolledCourses"
+              ? "bg-indigo-100 text-indigo-600"
+              : "text-gray-700 hover:bg-gray-100"
+              }`}
           >
             <Book className="mr-2 h-5 w-5" />
             Enrolled Courses
@@ -186,24 +208,24 @@ export default function StudentDashboard() {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               {/* <div className="flex items-center space-x-4">
-                <label htmlFor="semester" className="font-medium text-gray-700">
-                  Semester:
-                </label>
-                <select
-                  id="semester"
-                  value={currentSem}
-                  // onChange={(e) => fetchCourses(Number(e.target.value))}
-                  className="border rounded p-2 text-gray-700"
-                >
-                  {Array.from({ length: 8 }, (_, i) => i + 1).map(
-                    (semester) => (
-                      <option key={semester} value={semester}>
-                        Semester {semester}
-                      </option>
-                    )
-                  )}
-                </select>
-              </div> */}
+                  <label htmlFor="semester" className="font-medium text-gray-700">
+                    Semester:
+                  </label>
+                  <select
+                    id="semester"
+                    value={currentSem}
+                    // onChange={(e) => fetchCourses(Number(e.target.value))}
+                    className="border rounded p-2 text-gray-700"
+                  >
+                    {Array.from({ length: 8 }, (_, i) => i + 1).map(
+                      (semester) => (
+                        <option key={semester} value={semester}>
+                          Semester {semester}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div> */}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
@@ -218,11 +240,10 @@ export default function StudentDashboard() {
                           selectedSemester === semester ? null : semester
                         )
                       }
-                      className={`px-4 py-2 rounded ${
-                        selectedSemester === semester
-                          ? "bg-indigo-600 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
+                      className={`px-4 py-2 rounded ${selectedSemester === semester
+                        ? "bg-indigo-600 text-white"
+                        : "bg-gray-200 text-gray-800"
+                        }`}
                     >
                       Semester {semester}
                     </button>
@@ -272,14 +293,18 @@ export default function StudentDashboard() {
                                 <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                                   {course.courseCredit}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <button
-                                    onClick={() => addSelectedCourse(course)}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    <ChevronRight className="h-5 w-5" />
-                                  </button>
-                                </td>
+                                {
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <button
+                                      onClick={() => addSelectedCourse(course)}
+                                      // onClick={() => {console.log(course);console.log(currentSem)}}
+                                      className="text-indigo-600 hover:text-indigo-900"
+                                      disabled={!(course.semester >= currentSem)}
+                                    >
+                                      <ChevronRight className="h-5 w-5" />
+                                    </button>
+                                  </td>
+                                }
                               </tr>
                             ))}
                           </tbody>
@@ -294,9 +319,9 @@ export default function StudentDashboard() {
                 <h4 className="text-xl font-semibold mb-4 text-gray-800">
                   Selected Courses
                 </h4>
-                <p className="text-sm text-gray-600 mb-2">
-                  Total Credits: {totalCredits}/30
-                </p>
+                {/* <p className="text-sm text-gray-600 mb-2">
+                    Total Credits: {totalCredits}/30
+                  </p> */}
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -343,12 +368,12 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            <button
-              onClick={handleSubmit}
-              className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Submit Enrollment
-            </button>
+            {/* <button
+                onClick={handleSubmit}
+                className="mt-6 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              >
+                Submit Enrollment
+              </button> */}
           </div>
         )}
 
@@ -359,15 +384,9 @@ export default function StudentDashboard() {
             </h3>
 
             {report.map((semesterReport) => {
-              // Map the enrolled course IDs to course details
               const enrolledCoursesForSemester = semesterReport.enrolled_courses
-                .map((courseId) => {
-                  const course = enrolledCourses.find(
-                    (enrolled) => enrolled.id === courseId
-                  );
-                  return course ? course.course : null;
-                })
-                .filter(Boolean); // Remove null values
+                .map((enrolled) => enrolled.course)
+                .filter(Boolean);
 
               return (
                 <div key={semesterReport.id} className="mb-6">
@@ -379,12 +398,6 @@ export default function StudentDashboard() {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Reason for Rejection
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Course Name
                           </th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -393,20 +406,15 @@ export default function StudentDashboard() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Credits
                           </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {enrolledCoursesForSemester.length > 0 ? (
                           enrolledCoursesForSemester.map((course) => (
                             <tr key={course.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                                {semesterReport.is_approved
-                                  ? "Approved"
-                                  : "Not Approved"}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
-                                {semesterReport.reason_for_rejection || "N/A"}
-                              </td>
                               <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                                 {course.name}
                               </td>
@@ -416,12 +424,23 @@ export default function StudentDashboard() {
                               <td className="px-6 py-4 whitespace-nowrap text-gray-700">
                                 {course.courseCredit}
                               </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-gray-700">
+                                {semesterReport.is_approved ? (
+                                  <span className="text-green-600">Accepted</span>
+                                ) : semesterReport.reason_for_rejection ? (
+                                  <span className="text-red-600">{semesterReport.reason_for_rejection}</span>
+                                ) : (
+                                  <span className="text-yellow-600">Pending</span>
+                                )}
+                              </td>
+
+
                             </tr>
                           ))
                         ) : (
                           <tr>
                             <td
-                              colSpan="5"
+                              colSpan="4"
                               className="px-6 py-4 whitespace-nowrap text-gray-700 text-center"
                             >
                               No Courses
@@ -436,6 +455,8 @@ export default function StudentDashboard() {
             })}
           </div>
         )}
+
+
       </main>
     </div>
   );

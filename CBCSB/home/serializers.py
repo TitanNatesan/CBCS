@@ -51,6 +51,11 @@ class BulkUploadCourses(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ['id', 'name', 'code', "courseCredit", 'semester', "program", "department","batch"]
+
+class SingleUploadCourses(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = ['id', 'name', 'code', "courseCredit", 'semester', "program", "batch"]
         
 
 class CourseItemSerial(serializers.ModelSerializer):
@@ -82,6 +87,7 @@ class LoginSerial(serializers.Serializer):
     password = serializers.CharField()
     
 class ReportSerial(serializers.ModelSerializer):
+    enrolled_courses = CourseItemSerial(many=True)
     class Meta:
         model = SemReport
         fields = "__all__"
@@ -99,7 +105,7 @@ class StudentUploadSerializer(serializers.ModelSerializer):
     file = serializers.FileField(required=True)
     class Meta:
         model = Student
-        fields = ["program","sem","file"]
+        fields = ["program","file"]
         
     def validate_file(self, value):
         # Add validation for file type if necessary

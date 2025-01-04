@@ -117,7 +117,7 @@ export default function CoursesList({ course }) {
         </span>
       </div>
       <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-        <div className="max-h-[400px] overflow-y-auto">
+        <div className=" overflow-y-auto">
           <table className="min-w-full">
             <thead className="bg-gray-100">
               <tr>

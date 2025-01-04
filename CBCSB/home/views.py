@@ -302,7 +302,6 @@ class StudentRegisterBulk(generics.CreateAPIView):
             # Read the Excel file into a DataFrame
             df = pd.read_excel(uploaded_file)
             program = models.Program.objects.get(pk=request.data['program'])
-            semester = request.data['sem']
             department = models.Department.objects.get(pk=request.user.hod.department.id)
             
             # Process each record in the DataFrame
@@ -319,7 +318,7 @@ class StudentRegisterBulk(generics.CreateAPIView):
                     "department": department.id,
                     "program": program.id,
                     "batch": batch_obj.id,
-                    "sem": semester,
+                    "sem": itm['Semester (number)'],
                     "first_name": itm["first_name"],
                     "last_name": itm["last_name"],
                     "enrolled_courses": [],
@@ -455,6 +454,7 @@ def studDashBoard(request):
                     course_status = models.CourseStatus(course=course, status="Enrolled", semester=request.user.student.sem)
                     course_status.save()
                     report.enrolled_courses.add(course_status)
+                    report.reason_for_rejection = ""
                     report.save()
                     cont['message'].append(f"{course.name} enrolled successfully.")
             except models.Course.DoesNotExist: cont['errors'].append(f"Course with ID {course_id} does not exist.")
@@ -537,14 +537,16 @@ def HodDashBoard(req):
     
     if req.method == "POST" and req.data.get("type") == "CourseUpload":
         ic(req.data)
+        req.data['batch'] = list(req.data['batch'])
         cont = {}
-        course = serializers.BulkUploadCourses(data=req.data)
+        course = serializers.SingleUploadCourses(data=req.data)
         if course.is_valid():
             course.save(department=req.user.hod.department)
             cont['message'] = "Course Created Successfully"
             return Response(cont , status=status.HTTP_201_CREATED)
         else:
             cont['error'] = course.errors
+            ic(course.errors)
             return Response(cont, status=status.HTTP_400_BAD_REQUEST)
     
     if req.method == "POST" and req.data.get("type") == "getsemReports":
@@ -564,8 +566,8 @@ def HodDashBoard(req):
         if approval and report.is_approved: return Response({"message":"already approved"},status=status.HTTP_304_NOT_MODIFIED)
         if not approval and report.is_approved: return Response({"message":"can't update"},status=status.HTTP_406_NOT_ACCEPTABLE)
         if not approval and not report.is_approved:
-            # reason = req.data.get("ror")
-            # report.reason_for_rejection = reason
+            reason = req.data.get("ror")
+            report.reason_for_rejection = reason
             report.save()
             return Response({"message":"reason added"},status=status.HTTP_202_ACCEPTED)
         if approval and not report.is_approved:

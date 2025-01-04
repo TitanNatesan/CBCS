@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-      <Toaster position="bottom-center" />
+      <Toaster position="top-right" />
 
         <Navbar />
         {children}

@@ -36,13 +36,13 @@ const Page = () => {
   }, []);
 
   return (
-    <div className="flex bg-white h-screen">
+    <div className="flex bg-white">
       <Sidebar setView={setView} />
       <div className="flex-1 p-6">
         {view === "upload" && <UploadForm />}
         {view === "students" && <StudentsList />}
         {view === "courses" && <CoursesList course={responseData.courses} />}
-        {view === "studentsupload" && <StudentBulkRegister />}
+        {view === "studentsupload" && <StudentBulkRegister program={responseData.programs} />}
         {view === "PaBv" && <PaBv program={responseData.programs} batch={responseData.batchs} />}
       </div>
     </div>

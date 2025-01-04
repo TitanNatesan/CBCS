@@ -3,10 +3,10 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
-import * as XLSX from "xlsx"; // Import xlsx library
 
-export default function StudentBulkRegister() {
+export default function StudentBulkRegister(props: any) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [program, setProgram] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -15,87 +15,85 @@ export default function StudentBulkRegister() {
 
     // Validate file type (xls, xlsx, csv)
     if (file && !file.name.match(/\.(xls|xlsx|csv)$/)) {
-      toast.error(
-        "Please upload a valid Excel or CSV file (.xls, .xlsx, .csv)"
-      );
+      toast.error("Please upload a valid Excel or CSV file (.xls, .xlsx, .csv)");
       setSelectedFile(null);
       return;
     }
 
     setSelectedFile(file);
   };
-
+  const token = localStorage.getItem("token")
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
 
-    if (!selectedFile) {
-      setErrorMessage("Please select a file to upload.");
+    if (!program) {
+      toast.error("Please select a program.");
       return;
     }
 
-    const reader = new FileReader();
+    if (!selectedFile) {
+      toast.error("Please select a file to upload.");
+      return;
+    }
 
-    reader.onload = async (event) => {
-      const data = new Uint8Array(event.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array" });
-
-      // Assuming the data is in the first sheet
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-
-      // Convert sheet to JSON
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-      // You can log jsonData to check the parsed values
-      console.log(jsonData);
-
-      // Sending the parsed data to the backend
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          "http://localhost:8000/studentblukregister/", // Your API endpoint
-          { data: jsonData }, // Sending JSON data to the backend
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.status === 201) {
-          toast.success("File uploaded and processed successfully!");
-          setSelectedFile(null);
-        } else {
-          toast.error("File upload failed.");
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+    formData.append("program", program);
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/studentblukregister/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Token ${token}`, // Add the token here
+          },
         }
-      } catch (error: any) {
-        console.error("File upload error:", error);
-        const errorResponse =
-          error.response?.data?.error ||
-          "There was an error uploading the file.";
-        setErrorMessage(errorResponse);
-        toast.error(errorResponse);
-      } finally {
-        setLoading(false);
-      }
-    };
+      );
 
-    reader.onerror = () => {
-      toast.error("There was an error reading the file.");
+      toast.success("File uploaded successfully!");
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred while uploading the file.");
+    } finally {
       setLoading(false);
-    };
-
-    reader.readAsArrayBuffer(selectedFile);
+    }
   };
-
+  const downloadTemplate = () => {
+    const link = document.createElement('a');
+    link.href = '/studentdata.xlsx';
+    link.download = 'student_template.xlsx';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg mx-auto bg-white rounded-lg shadow-xl p-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">
           Upload Excel/CSV File for Student Registration
         </h2>
-
+        <div className="mb-4 font-black">
+          <label htmlFor="program" className="block text-sm font-medium text-gray-700">
+            Select a Program
+          </label>
+          <select
+            id="program"
+            value={program}
+            onChange={(e) => setProgram(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-black"
+          >
+            <option value="">Select a program</option>
+            {props.program?.map((prog: any) => (
+              <option key={prog.id} value={prog.id}>
+                {prog.name} - {prog.department.name}
+              </option>
+            ))}
+          </select>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label
@@ -120,9 +118,8 @@ export default function StudentBulkRegister() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
           >
             {loading ? (
               <svg
@@ -151,6 +148,21 @@ export default function StudentBulkRegister() {
           </button>
         </form>
       </div>
+      <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-lg mx-auto bg-white rounded-lg shadow-xl p-8">
+          <button
+            onClick={downloadTemplate}
+            className="mb-6 text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+          >
+            Download Template File
+          </button>
+          {/* Rest of your existing JSX */}
+        </div>
+      </div>
+
     </div>
   );
 }
+
+
+
